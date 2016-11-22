@@ -1,0 +1,17 @@
+{
+    "name": "paysera/lib-serializer",
+    "description": "Library can (de)serialize various data types",
+    "autoload": {
+        "psr-4": {
+            "Paysera\\Component\\Serializer\\": "src/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "require": {
+        "symfony/property-access": "2.*|3.*",
+        "symfony/validator": "2.*|3.*",
+        "willdurand/jsonp-callback-validator": "~1.0"
+    }
+}
