@@ -54,6 +54,12 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
         if ($entity->isOrderAsc() !== null) {
             $data['order_direction'] = $entity->isOrderAsc() ? 'asc' : 'desc';
         }
+        if ($entity->getAfter() !== null) {
+            $data['after'] = $entity->getAfter();
+        }
+        if ($entity->getBefore() !== null) {
+            $data['before'] = $entity->getBefore();
+        }
         return $data;
     }
 
@@ -62,8 +68,19 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
     {
         $limit = isset($data['limit']) ? $data['limit'] : null;
         $offset = isset($data['offset']) ? $data['offset'] : null;
+        $after = isset($data['after']) ? $data['after'] : null;
+        $before = isset($data['before']) ? $data['before'] : null;
         $orderBy = isset($data['order_by']) ? $data['order_by'] : null;
         $orderDirection = isset($data['order_direction']) ? $data['order_direction'] : null;
+
+
+        if (
+            ($before !== null && $after !== null)
+            || ($before !== null && $offset !== null)
+            || ($after !== null && $offset !== null)
+        ) {
+            throw new InvalidDataException('Only one cursor is supported');
+        }
 
         if ($limit !== null) {
             if ((string)$limit !== (string)(int)$limit) {
@@ -89,10 +106,12 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
             if ($offset < 0) {
                 throw new InvalidDataException('offset cannot be negative');
             }
-        } else {
-            $offset = 0;
+
+            $filter->setOffset($offset);
         }
-        $filter->setOffset($offset);
+
+        $filter->setBefore($before);
+        $filter->setAfter($after);
 
         if ($orderBy) {
             if (!in_array($orderBy, $this->orderByFields, true)) {

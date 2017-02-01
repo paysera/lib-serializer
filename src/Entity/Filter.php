@@ -29,6 +29,16 @@ class Filter
     protected $limit;
 
     /**
+     * @var string|null
+     */
+    protected $after;
+
+    /**
+     * @var string
+     */
+    protected $before;
+
+    /**
      * Sets orderBy
      *
      * @param string $orderBy
@@ -100,11 +110,11 @@ class Filter
     /**
      * Gets offset
      *
-     * @return int
+     * @return int|null
      */
     public function getOffset()
     {
-        return $this->offset;
+        return ($this->getAfter() !== null || $this->getBefore() !== null) ? null : $this->offset;
     }
 
     /**
@@ -128,6 +138,42 @@ class Filter
     public function getLimit()
     {
         return $this->limit;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAfter()
+    {
+        return $this->after;
+    }
+
+    /**
+     * @param string $after
+     * @return $this
+     */
+    public function setAfter($after)
+    {
+        $this->after = $after;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBefore()
+    {
+        return $this->before;
+    }
+
+    /**
+     * @param string $before
+     * @return $this
+     */
+    public function setBefore($before)
+    {
+        $this->before = $before;
+        return $this;
     }
 
     /**

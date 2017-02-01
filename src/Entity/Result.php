@@ -10,6 +10,26 @@ class Result implements \IteratorAggregate, ResultInterface
     protected $totalCount = 0;
 
     /**
+     * @var boolean|null
+     */
+    protected $hasNext;
+
+    /**
+     * @var boolean|null
+     */
+    protected $hasPrevious;
+
+    /**
+     * @var string|null
+     */
+    protected $after;
+
+    /**
+     * @var string|null
+     */
+    protected $before;
+
+    /**
      * @var Filter
      */
     protected $filter;
@@ -49,6 +69,42 @@ class Result implements \IteratorAggregate, ResultInterface
     }
 
     /**
+     * @return bool
+     */
+    public function hasNext()
+    {
+        return $this->hasNext;
+    }
+
+    /**
+     * @param bool $hasNext
+     * @return $this
+     */
+    public function setHasNext($hasNext)
+    {
+        $this->hasNext = $hasNext;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function hasPrevious()
+    {
+        return $this->hasPrevious;
+    }
+
+    /**
+     * @param bool $hasPrevious
+     * @return $this
+     */
+    public function setHasPrevious($hasPrevious)
+    {
+        $this->hasPrevious = $hasPrevious;
+        return $this;
+    }
+
+    /**
      * Sets filter
      *
      * @param Filter $filter
@@ -69,6 +125,42 @@ class Result implements \IteratorAggregate, ResultInterface
     public function getFilter()
     {
         return $this->filter;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getAfter()
+    {
+        return $this->after;
+    }
+
+    /**
+     * @param null|string $after
+     * @return $this
+     */
+    public function setAfter($after)
+    {
+        $this->after = $after;
+        return $this;
+    }
+
+    /**
+     * @return null|string
+     */
+    public function getBefore()
+    {
+        return $this->before;
+    }
+
+    /**
+     * @param null|string $before
+     * @return $this
+     */
+    public function setBefore($before)
+    {
+        $this->before = $before;
+        return $this;
     }
 
     /**
