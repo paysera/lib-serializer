@@ -212,7 +212,8 @@ class Result implements \IteratorAggregate, ResultInterface
         }
 
         if (
-            ($this->getFilter()->getLimit() === null || $resultCount < (int)$this->getFilter()->getLimit())
+            $this->getFilter()->getOffset() !== null
+            && ($this->getFilter()->getLimit() === null || $resultCount < (int)$this->getFilter()->getLimit())
             && ($resultCount !== 0 || $this->getFilter()->getOffset() === 0)
         ) {
             $this->totalCount = $resultCount + $this->getFilter()->getOffset();
