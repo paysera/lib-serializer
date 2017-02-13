@@ -28,7 +28,8 @@ class ResultNormalizer implements ContextAwareNormalizerInterface, DenormalizerI
      * @param string                                    $itemsKey
      * @param NormalizerInterface|DenormalizerInterface $itemNormalizer
      */
-    public function __construct($itemsKey, $itemNormalizer) {
+    public function __construct($itemsKey, $itemNormalizer)
+    {
         $this->itemsNormalizer = new ArrayNormalizer($itemNormalizer);
         $this->itemsKey = $itemsKey;
     }
@@ -82,14 +83,43 @@ class ResultNormalizer implements ContextAwareNormalizerInterface, DenormalizerI
 
     protected function mapBaseKeys($data, Result $result)
     {
-        $result->setTotalCount($data['_metadata']['total']);
         $filter = new Filter();
-        $filter
-            ->setLimit($data['_metadata']['limit'])
-            ->setOffset($data['_metadata']['offset'])
-        ;
+        $metadata = isset($data['_metadata']) ? $data['_metadata'] : null;
+        if ($metadata !== null) {
+            if (isset($metadata['total'])) {
+                $result->setTotalCount($metadata['total']);
+            }
+
+            if (isset($metadata['limit'])) {
+                $filter->setLimit($metadata['limit']);
+            }
+
+            if (isset($metadata['offset'])) {
+                $filter->setOffset($metadata['offset']);
+            }
+
+            if (isset($metadata['cursors'])) {
+                if (isset($metadata['cursors']['before'])) {
+                    $result->setBefore($metadata['cursors']['before']);
+                }
+
+                if (isset($metadata['cursors']['after'])) {
+                    $result->setAfter($metadata['cursors']['after']);
+                }
+            }
+
+            if (isset($metadata['has_next'])) {
+                $result->setHasNext($metadata['has_next']);
+            }
+
+            if (isset($metadata['has_previous'])) {
+                $result->setHasPrevious($metadata['has_previous']);
+            }
+        }
+
         $result->setFilter($filter);
         $result->setItems($this->itemsNormalizer->mapToEntity($data[$this->itemsKey]));
+
         return $result;
     }
 
