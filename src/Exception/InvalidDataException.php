@@ -14,6 +14,11 @@ class InvalidDataException extends \Exception
      */
     protected $properties;
 
+    /**
+     * @var array
+     */
+    protected $codes;
+
     public function __construct($message = '', $customCode = null, \Exception $previous = null)
     {
         $this->customCode = $customCode;
@@ -34,10 +39,14 @@ class InvalidDataException extends \Exception
      * Sets properties
      *
      * @param mixed $properties
+     *
+     * @return $this
      */
     public function setProperties($properties)
     {
         $this->properties = $properties;
+
+        return $this;
     }
 
     /**
@@ -48,5 +57,25 @@ class InvalidDataException extends \Exception
     public function getProperties()
     {
         return $this->properties;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCodes()
+    {
+        return $this->codes;
+    }
+
+    /**
+     * @param array $codes
+     *
+     * @return $this
+     */
+    public function setCodes(array $codes)
+    {
+        $this->codes = $codes;
+
+        return $this;
     }
 }
