@@ -3,8 +3,10 @@
 namespace Paysera\Component\Serializer\Validation;
 
 use Paysera\Component\Serializer\Exception\InvalidDataException;
+use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ValidatorInterface as LegacyValidatorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Validator\Exception\InvalidArgumentException;
 
 
 /**
@@ -46,6 +48,7 @@ class PropertiesAwareValidator
         $violationList = $this->validator->validate($entity, $groups);
         if ($violationList->count() > 0) {
             $properties = array();
+            $codes = array();
 
             foreach ($violationList as $violation) {
                 $path = $violation->getPropertyPath();
@@ -53,12 +56,24 @@ class PropertiesAwareValidator
                     $path = $this->propertyPathConverter->convert($path);
                 }
                 $properties[$path][] = $violation->getMessage();
+
+                /** @var Constraint $constraint */
+                $constraint = $violation->getConstraint();
+                if ($constraint !== null && $violation->getCode() !== null) {
+                    try {
+                        $codes[$path][] = mb_strtolower(
+                            str_replace('_ERROR', '', $constraint->getErrorName($violation->getCode()))
+                        );
+                    } catch (InvalidArgumentException $exception) {
+                        $codes[$path][] = $violation->getCode();
+                    }
+                }
             }
 
-            $exception = new InvalidDataException();
-            $exception->setProperties($properties);
-
-            throw $exception;
+            throw (new InvalidDataException())
+                ->setProperties($properties)
+                ->setCodes($codes)
+            ;
         }
     }
 }
