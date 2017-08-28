@@ -45,7 +45,12 @@ class PropertiesAwareValidator
      */
     public function validate($entity, $groups = null)
     {
-        $violationList = $this->validator->validate($entity, $groups);
+        if ($this->validator instanceof ValidatorInterface) {
+            $violationList = $this->validator->validate($entity, null, $groups);
+        } else {
+            $violationList = $this->validator->validate($entity, $groups);
+        }
+
         if ($violationList->count() > 0) {
             $properties = array();
             $codes = array();
