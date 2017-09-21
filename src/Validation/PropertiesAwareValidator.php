@@ -7,12 +7,14 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ValidatorInterface as LegacyValidatorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
+use Symfony\Component\Validator\ConstraintViolation;
+use Paysera\Component\Serializer\Entity\Violation;
 
 
 /**
  * Purpose:
  *     1. detect invalid properties
- *     2. throws exception with detailed information about each invalid property (name, message).
+ *     2. throws exception with detailed information about each invalid property (name, message, violations).
  *
  * Use case:
  *     1. front-end sends data to REST API. If data invalid, then front-end will get detailed information
@@ -53,32 +55,50 @@ class PropertiesAwareValidator
 
         if ($violationList->count() > 0) {
             $properties = array();
-            $codes = array();
+            $violations = array();
 
             foreach ($violationList as $violation) {
                 $path = $violation->getPropertyPath();
                 if ($this->propertyPathConverter !== null) {
                     $path = $this->propertyPathConverter->convert($path);
                 }
-                $properties[$path][] = $violation->getMessage();
 
-                /** @var Constraint $constraint */
-                $constraint = $violation->getConstraint();
-                if ($constraint !== null && $violation->getCode() !== null) {
-                    try {
-                        $codes[$path][] = mb_strtolower(
-                            str_replace('_ERROR', '', $constraint->getErrorName($violation->getCode()))
-                        );
-                    } catch (InvalidArgumentException $exception) {
-                        $codes[$path][] = $violation->getCode();
-                    }
-                }
+                $violations[] = (new Violation())
+                    ->setField($path)
+                    ->setMessage($violation->getMessage())
+                    ->setCode($this->getErrorCode($violation))
+                ;
+
+                $properties[$path][] = $violation->getMessage();
             }
 
             throw (new InvalidDataException())
                 ->setProperties($properties)
-                ->setCodes($codes)
+                ->setViolations($violations)
             ;
         }
+    }
+
+    /**
+     * @param ConstraintViolation $violation
+     *
+     * @return null|string
+     */
+    private function getErrorCode(ConstraintViolation $violation)
+    {
+        /** @var Constraint $constraint */
+        $constraint = $violation->getConstraint();
+
+        if ($constraint !== null && $violation->getCode() !== null) {
+            try {
+                return mb_strtolower(
+                    str_replace('_ERROR', '', $constraint->getErrorName($violation->getCode()))
+                );
+            } catch (InvalidArgumentException $exception) {
+                return $violation->getCode();
+            }
+        }
+
+        return null;
     }
 }

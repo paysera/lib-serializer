@@ -2,26 +2,31 @@
 
 namespace Paysera\Component\Serializer\Exception;
 
-class InvalidDataException extends \Exception
+use Paysera\Component\Serializer\Entity\Violation;
+use Exception;
+
+class InvalidDataException extends Exception
 {
     /**
      * @var string
      */
-    protected $customCode;
+    private $customCode;
 
     /**
      * @var mixed
      */
-    protected $properties;
+    private $properties;
 
     /**
      * @var array
      */
-    protected $codes;
+    private $violations;
 
     public function __construct($message = '', $customCode = null, \Exception $previous = null)
     {
         $this->customCode = $customCode;
+        $this->violations = [];
+
         parent::__construct($message, 0, $previous);
     }
 
@@ -60,21 +65,33 @@ class InvalidDataException extends \Exception
     }
 
     /**
-     * @return array
+     * @return Violation[]
      */
-    public function getCodes()
+    public function getViolations()
     {
-        return $this->codes;
+        return $this->violations;
     }
 
     /**
-     * @param array $codes
+     * @param Violation[] $violations
      *
      * @return $this
      */
-    public function setCodes(array $codes)
+    public function setViolations(array $violations)
     {
-        $this->codes = $codes;
+        $this->violations = $violations;
+
+        return $this;
+    }
+
+    /**
+     * @param Violation $violation
+     *
+     * @return $this
+     */
+    public function addViolation(Violation $violation)
+    {
+        $this->violations[] = $violation;
 
         return $this;
     }
