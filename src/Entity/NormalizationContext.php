@@ -4,24 +4,22 @@ namespace Paysera\Component\Serializer\Entity;
 
 class NormalizationContext implements NormalizationContextInterface
 {
-
     /**
-     * @var array of string
+     * @var array
      */
-    protected $fields = array();
+    protected $fields;
 
     /**
      * @var array
      */
-    protected $scope = array();
+    protected $scope;
 
-    /**
-     * Sets fields
-     *
-     * @param array $fields
-     *
-     * @return $this
-     */
+    public function __construct()
+    {
+        $this->fields = [];
+        $this->scope = [];
+    }
+
     public function setFields(array $fields)
     {
         $this->fields = $fields;
@@ -29,11 +27,6 @@ class NormalizationContext implements NormalizationContextInterface
         return $this;
     }
 
-    /**
-     * Gets fields
-     *
-     * @return array
-     */
     public function getFields()
     {
         return $this->fields;
@@ -48,16 +41,12 @@ class NormalizationContext implements NormalizationContextInterface
     {
         $context = clone $this;
         $context->scope[] = $fieldName;
+
         return $context;
     }
 
-    /**
-     * @return array
-     */
     public function getScope()
     {
         return $this->scope;
     }
-
-
 }

@@ -4,10 +4,7 @@ namespace Paysera\Component\Serializer\Entity;
 
 interface NormalizationContextInterface
 {
-
     /**
-     * Gets fields
-     *
      * @return array
      */
     public function getFields();
@@ -23,5 +20,4 @@ interface NormalizationContextInterface
      * @return array
      */
     public function getScope();
-
 }
