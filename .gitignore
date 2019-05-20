@@ -1,5 +1,6 @@
 vendor/
 cache.*
+.phpunit.result.cache
 composer.lock
 build/
 bin/

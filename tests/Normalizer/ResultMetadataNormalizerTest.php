@@ -5,8 +5,9 @@ namespace Paysera\Component\Serializer\Tests\Filter;
 use Paysera\Component\Serializer\Entity\Filter;
 use Paysera\Component\Serializer\Entity\Result;
 use Paysera\Component\Serializer\Normalizer\ResultMetadataNormalizer;
+use PHPUnit\Framework\TestCase;
 
-class ResultMetadataNormalizerTest extends \PHPUnit_Framework_TestCase
+class ResultMetadataNormalizerTest extends TestCase
 {
     /**
      * @param Result $result

@@ -6,8 +6,9 @@ use Paysera\Component\Serializer\Entity\Filter;
 use Paysera\Component\Serializer\Entity\Result;
 use Paysera\Component\Serializer\Normalizer\PlainNormalizer;
 use Paysera\Component\Serializer\Normalizer\ResultNormalizer;
+use PHPUnit\Framework\TestCase;
 
-class ResultNormalizerTest extends \PHPUnit_Framework_TestCase
+class ResultNormalizerTest extends TestCase
 {
     /**
      * @param array $data
