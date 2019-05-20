@@ -10,7 +10,7 @@
         "phpunit/phpunit": "^8.0"
     },
     "require": {
-        "php": ">=7.1",
+        "php": "^7.2",
         "symfony/property-access": "^4.2",
         "symfony/validator": "^4.2",
         "willdurand/jsonp-callback-validator": "~1.0"
