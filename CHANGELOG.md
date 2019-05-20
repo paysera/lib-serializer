@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `.phpunit.result.cache` to `.gitignore` generated from the new version of PHP Unit.
 
+### Removed
+- `syntaxCheck` property from `phpunit.xml.dist` file.
+
 ## 2.1.0
 ### Added
 - Added `ContextAwareDenormalizerInterface` which supports denormalization with optional `NormalizationContextInterface`
