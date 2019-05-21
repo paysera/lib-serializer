@@ -4,12 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.2.0
+## 3.0.0
 ### Changed
 ```
-"phpunit/phpunit": "^8.0"
-"symfony/property-access": "^4.2",
-"symfony/validator": "^4.2",`
+"php": "^7.1.3",
+"phpunit/phpunit": "^7.0"
+"symfony/property-access": "^4.0",
+"symfony/validator": "^4.0",`
 ```
 
 ### Fixed
