@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class DateNormalizerTest extends TestCase
 {
-    public function setUp(): void
+    public function setUp()
     {
         date_default_timezone_set('Etc/GMT-2'); //same as UTC+2
     }
