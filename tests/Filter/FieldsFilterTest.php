@@ -4,8 +4,9 @@ namespace Paysera\Component\Serializer\Tests\Filter;
 
 use Paysera\Component\Serializer\Filter\FieldsFilter;
 use Paysera\Component\Serializer\Filter\FieldsParser;
+use PHPUnit\Framework\TestCase;
 
-class FieldsFilterTest extends \PHPUnit_Framework_TestCase
+class FieldsFilterTest extends TestCase
 {
     /**
      * @var FieldsFilter

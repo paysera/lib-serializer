@@ -3,8 +3,9 @@
 namespace Paysera\Component\Serializer\Tests\Converter;
 
 use Paysera\Component\Serializer\Converter\CamelCaseToSnakeCaseConverter;
+use PHPUnit\Framework\TestCase;
 
-class CamelCaseToSnakeCaseConverterTest extends \PHPUnit_Framework_TestCase
+class CamelCaseToSnakeCaseConverterTest extends TestCase
 {
     /**
      * @var CamelCaseToSnakeCaseConverter

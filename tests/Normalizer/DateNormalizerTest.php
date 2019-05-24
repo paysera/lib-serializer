@@ -4,8 +4,9 @@ namespace Paysera\Component\Serializer\Tests\Filter;
 
 use Paysera\Component\Serializer\Exception\InvalidDataException;
 use Paysera\Component\Serializer\Normalizer\DateNormalizer;
+use PHPUnit\Framework\TestCase;
 
-class DateNormalizerTest extends \PHPUnit_Framework_TestCase
+class DateNormalizerTest extends TestCase
 {
     public function setUp()
     {
@@ -61,7 +62,7 @@ class DateNormalizerTest extends \PHPUnit_Framework_TestCase
         $service = new DateNormalizer('Y-m-d H:i:s', new \DateTimeZone('Etc/GMT+0'));
 
         $datetime = null;
-        $this->setExpectedException(InvalidDataException::class);
+        $this->expectException(InvalidDataException::class);
         $service->mapToEntity('2013-02-31 12:00:00');
     }
 }

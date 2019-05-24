@@ -4,8 +4,10 @@ namespace Paysera\Component\Serializer\Tests\Filter;
 
 use Paysera\Component\Serializer\Entity\Filter;
 use Paysera\Component\Serializer\Normalizer\FilterNormalizer;
+use PHPUnit\Framework\TestCase;
+use Paysera\Component\Serializer\Exception\InvalidDataException;
 
-class FilterNormalizerTest extends \PHPUnit_Framework_TestCase
+class FilterNormalizerTest extends TestCase
 {
     /**
      * @param Filter $filter
@@ -33,10 +35,10 @@ class FilterNormalizerTest extends \PHPUnit_Framework_TestCase
      * @param array $data
      *
      * @dataProvider mapToEntityThrowExceptionDataProvider
-     * @expectedException \Paysera\Component\Serializer\Exception\InvalidDataException
      */
     public function testMapToEntityThrowException(array $data)
     {
+        $this->expectException(InvalidDataException::class);
         (new FilterNormalizer())->mapToEntity($data);
     }
 

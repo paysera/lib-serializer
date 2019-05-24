@@ -4,7 +4,6 @@ namespace Paysera\Component\Serializer\Validation;
 
 use Paysera\Component\Serializer\Exception\InvalidDataException;
 use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\ValidatorInterface as LegacyValidatorInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\Validator\Exception\InvalidArgumentException;
 use Symfony\Component\Validator\ConstraintViolation;
@@ -26,7 +25,7 @@ class PropertiesAwareValidator
     protected $propertyPathConverter;
 
     /**
-     * @param ValidatorInterface|LegacyValidatorInterface $validator
+     * @param ValidatorInterface $validator
      * @param PropertyPathConverterInterface $propertyPathConverter
      */
     public function __construct(
