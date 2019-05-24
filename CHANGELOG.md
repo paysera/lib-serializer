@@ -6,12 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 3.0.0
 ### Changed
-```
-"php": "^7.1",
-"phpunit/phpunit": "^7.0"
-"symfony/property-access": "^4.0",
-"symfony/validator": "^4.0",`
-```
+- Dropped Symfony 2 support. Added Symfony 4 support. Now it supports versions 3 and 4.
 
 ### Fixed
 - `PHPUnit\Framework\TestCase` implementation with new PHP Unit framework version.
