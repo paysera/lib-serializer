@@ -12,7 +12,7 @@ class CamelCaseToSnakeCaseConverterTest extends TestCase
      */
     protected $camelCaseToSnakeCaseConverter;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->camelCaseToSnakeCaseConverter = new CamelCaseToSnakeCaseConverter();
     }
