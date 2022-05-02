@@ -1,6 +1,6 @@
 <?php
 
-namespace Paysera\Component\Serializer\Tests\Filter;
+namespace Paysera\Component\Serializer\Tests\Normalizer;
 
 use Paysera\Component\Serializer\Entity\Filter;
 use Paysera\Component\Serializer\Entity\Result;
