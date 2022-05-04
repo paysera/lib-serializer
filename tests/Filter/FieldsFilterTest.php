@@ -18,7 +18,7 @@ class FieldsFilterTest extends TestCase
      */
     protected $fieldsParser;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->fieldsFilter = new FieldsFilter(new FieldsParser());
     }

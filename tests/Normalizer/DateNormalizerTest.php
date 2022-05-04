@@ -1,6 +1,6 @@
 <?php
 
-namespace Paysera\Component\Serializer\Tests\Filter;
+namespace Paysera\Component\Serializer\Tests\Normalizer;
 
 use Paysera\Component\Serializer\Exception\InvalidDataException;
 use Paysera\Component\Serializer\Normalizer\DateNormalizer;
@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class DateNormalizerTest extends TestCase
 {
-    public function setUp()
+    public function setUp(): void
     {
         date_default_timezone_set('Etc/GMT-2'); //same as UTC+2
     }
