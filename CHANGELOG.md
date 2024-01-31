@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 3.3.0
 ### Added
 - Symfony 6 support.
+- Added GitHub workflow
 
 ## 3.2.0
 ### Added
