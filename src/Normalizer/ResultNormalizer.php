@@ -52,11 +52,11 @@ class ResultNormalizer implements ContextAwareNormalizerInterface, DenormalizerI
      * Maps some structure to raw data. Usually entity object to array
      *
      * @param mixed $entity
-     * @param \Paysera\Component\Serializer\Entity\NormalizationContextInterface $context
+     * @param null|NormalizationContextInterface $context
      *
      * @return mixed
      */
-    public function mapFromEntity($entity, NormalizationContextInterface $context = null)
+    public function mapFromEntity($entity, ?NormalizationContextInterface $context = null)
     {
         return array(
             $this->itemsKey => $this->mapItemsFromEntity(
@@ -128,7 +128,7 @@ class ResultNormalizer implements ContextAwareNormalizerInterface, DenormalizerI
         return $this->metadataNormalizer->mapFromEntity($result);
     }
 
-    protected function mapItemsFromEntity($items, NormalizationContextInterface $context = null)
+    protected function mapItemsFromEntity($items, ?NormalizationContextInterface $context = null)
     {
         return $this->itemsNormalizer->mapFromEntity($items, $context);
     }

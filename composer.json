@@ -1,6 +1,7 @@
 {
     "name": "paysera/lib-serializer",
     "description": "Library can (de)serialize various data types",
+    "version": "3.4.0",
     "autoload": {
         "psr-4": {
             "Paysera\\Component\\Serializer\\": "src/"

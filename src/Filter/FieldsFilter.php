@@ -17,12 +17,12 @@ class FieldsFilter
 
     /**
      * @param array $data
-     * @param array $fields
+     * @param null|array $fields
      * @param array $scope
      *
      * @return array
      */
-    public function filter($data, array $fields = null, array $scope = array())
+    public function filter($data, ?array $fields = null, array $scope = [])
     {
         $fieldsConfig = $this->fieldsParser->parseFields($fields, $scope);
 

@@ -41,7 +41,7 @@ class ArrayNormalizer implements DenormalizerInterface, ContextAwareNormalizerIn
         return $result;
     }
 
-    public function mapFromEntity($entity, NormalizationContextInterface $context = null)
+    public function mapFromEntity($entity, ?NormalizationContextInterface $context = null)
     {
         $result = array();
         if ($entity !== null) {
