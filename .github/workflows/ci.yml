@@ -59,6 +59,14 @@ jobs:
           php-version: ${{ matrix.php }}
           tools: flex
 
+      - name: Ignore specific Composer audit advisory
+        run: |
+            if [[ "${{ matrix.php }}" == "7.1" ]]; then
+                echo "COMPOSER_AUDIT_BLOCK_INSECURE=0" >> $GITHUB_ENV
+            else
+                composer config --global audit.ignore "PKSA-w2tw-kmfg-rt9s"
+            fi
+
       - name: Install dependencies
         uses: ramsey/composer-install@v2
         env:
