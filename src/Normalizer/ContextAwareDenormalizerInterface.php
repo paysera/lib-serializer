@@ -14,5 +14,5 @@ interface ContextAwareDenormalizerInterface extends DenormalizerInterface
      *
      * @return mixed
      */
-    public function mapToEntity($data, NormalizationContextInterface $context = null);
+    public function mapToEntity($data, ?NormalizationContextInterface $context = null);
 }

@@ -127,12 +127,12 @@ class DistributedNormalizer implements DenormalizerInterface, ContextAwareNormal
     /**
      * Maps some structure to raw data. Usually entity object to array
      *
-     * @param mixed                                                          $entity
-     * @param \Paysera\Component\Serializer\Entity\NormalizationContextInterface $context
+     * @param mixed $entity
+     * @param null|NormalizationContextInterface $context
      *
      * @return mixed
      */
-    public function mapFromEntity($entity, NormalizationContextInterface $context = null)
+    public function mapFromEntity($entity, ?NormalizationContextInterface $context = null)
     {
         if ($this->normalizer instanceof ContextAwareNormalizerInterface) {
             $data = $this->normalizer->mapFromEntity($entity, $context);

@@ -26,11 +26,11 @@ class PropertiesAwareValidator
 
     /**
      * @param ValidatorInterface $validator
-     * @param PropertyPathConverterInterface $propertyPathConverter
+     * @param null|PropertyPathConverterInterface $propertyPathConverter
      */
     public function __construct(
         $validator,
-        PropertyPathConverterInterface $propertyPathConverter = null
+        ?PropertyPathConverterInterface $propertyPathConverter = null
     ) {
         $this->validator = $validator;
         $this->propertyPathConverter = $propertyPathConverter;

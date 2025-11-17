@@ -40,7 +40,7 @@ class Result implements \IteratorAggregate, ResultInterface
     protected $items;
 
 
-    public function __construct(Filter $filter = null)
+    public function __construct(?Filter $filter = null)
     {
         $this->filter = $filter;
     }

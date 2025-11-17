@@ -6,12 +6,12 @@ class FieldsParser
 {
 
     /**
-     * @param array $fields
+     * @param null|array $fields
      * @param array $scope
      *
      * @return FieldsConfig
      */
-    public function parseFields(array $fields = null, array $scope = array())
+    public function parseFields(?array $fields = null, array $scope = [])
     {
         $fieldsConfig = $this->parseUnscopedFields($fields);
         foreach ($scope as $fieldName) {
@@ -21,12 +21,12 @@ class FieldsParser
     }
 
     /**
-     * @param array $fields
+     * @param null|array $fields
      *
      * @throws \InvalidArgumentException
      * @return FieldsConfig
      */
-    public function parseUnscopedFields(array $fields = null)
+    public function parseUnscopedFields(?array $fields = null)
     {
         if ($fields === null) {
             return $this->createWithDefaultsIncluded();
@@ -65,4 +65,4 @@ class FieldsParser
     {
         return new FieldsConfig(true, array(), array());
     }
-} 
+}

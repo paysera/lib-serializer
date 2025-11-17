@@ -22,7 +22,7 @@ class InvalidDataException extends Exception
      */
     private $violations;
 
-    public function __construct($message = '', $customCode = null, \Exception $previous = null)
+    public function __construct($message = '', $customCode = null, ?Exception $previous = null)
     {
         $this->customCode = $customCode;
         $this->violations = [];
