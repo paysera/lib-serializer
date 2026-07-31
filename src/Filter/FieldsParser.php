@@ -2,9 +2,10 @@
 
 namespace Paysera\Component\Serializer\Filter;
 
+use InvalidArgumentException;
+
 class FieldsParser
 {
-
     /**
      * @param null|array $fields
      * @param array $scope
@@ -23,7 +24,7 @@ class FieldsParser
     /**
      * @param null|array $fields
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      * @return FieldsConfig
      */
     public function parseUnscopedFields(?array $fields = null)
@@ -33,15 +34,15 @@ class FieldsParser
         }
 
         $defaultsIncluded = false;
-        $includedFields = array();
-        $fieldExtensions = array();
+        $includedFields = [];
+        $fieldExtensions = [];
 
         foreach ($fields as $fieldDefinition) {
             // todo: take curly braces? see commented test-case for possible usage
             foreach (explode(',', $fieldDefinition) as $field) {
                 $list = explode('.', $field, 2);
                 if (isset($list[1]) && $list[1] === '') {
-                    throw new \InvalidArgumentException('Invalid field provided, field cannot end with a dot');
+                    throw new InvalidArgumentException('Invalid field provided, field cannot end with a dot');
                 }
                 $name = $list[0];
                 $extension = isset($list[1]) ? $list[1] : null;
@@ -63,6 +64,6 @@ class FieldsParser
      */
     protected function createWithDefaultsIncluded()
     {
-        return new FieldsConfig(true, array(), array());
+        return new FieldsConfig(true, [], []);
     }
 }

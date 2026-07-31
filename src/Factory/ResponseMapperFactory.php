@@ -3,6 +3,7 @@
 namespace Paysera\Component\Serializer\Factory;
 
 use Paysera\Component\Serializer\Normalizer\NormalizerInterface;
+use RuntimeException;
 
 class ResponseMapperFactory implements ResponseMapperFactoryInterface
 {
@@ -22,7 +23,7 @@ class ResponseMapperFactory implements ResponseMapperFactoryInterface
     public function __construct(NormalizerInterface $defaultMapper)
     {
         $this->defaultMapper = $defaultMapper;
-        $this->mappers = array();
+        $this->mappers = [];
     }
 
     /**
@@ -40,14 +41,14 @@ class ResponseMapperFactory implements ResponseMapperFactoryInterface
     /**
      * @param array $options
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      * @return NormalizerInterface
      */
     public function createResponseMapper(array $options)
     {
         $key = isset($options[self::MAPPER_OPTION]) ? $options[self::MAPPER_OPTION] : null;
         if ($key !== null && !isset($this->mappers[$key])) {
-            throw new \RuntimeException('Wrong mapper key specified: ' . $key);
+            throw new RuntimeException('Wrong mapper key specified: ' . $key);
         }
         if ($key === null) {
             foreach ($options as $optionKey => $value) {
@@ -58,4 +59,4 @@ class ResponseMapperFactory implements ResponseMapperFactoryInterface
         }
         return $key !== null ? $this->mappers[$key] : $this->defaultMapper;
     }
-} 
+}

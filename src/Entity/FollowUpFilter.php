@@ -7,11 +7,6 @@ class FollowUpFilter extends Filter
     /**
      * @var int
      */
-    protected $offset;
-
-    /**
-     * @var int
-     */
     protected $remainingCount;
 
     public function __construct($remainingCount, $offset)

@@ -2,6 +2,8 @@
 
 namespace Paysera\Component\Serializer\Normalizer;
 
+use DateTime;
+use DateTimeZone;
 use Paysera\Component\Serializer\Exception\InvalidDataException;
 
 class DateNormalizer extends BaseDenormalizer implements NormalizerInterface
@@ -12,7 +14,7 @@ class DateNormalizer extends BaseDenormalizer implements NormalizerInterface
     protected $format;
 
     /**
-     * @var \DateTimeZone
+     * @var DateTimeZone
      */
     protected $remoteTimezone;
 
@@ -25,11 +27,15 @@ class DateNormalizer extends BaseDenormalizer implements NormalizerInterface
     /**
      * @param string $data
      * @throws InvalidDataException
-     * @return \DateTime
+     * @return DateTime
      */
     public function mapToEntity($data)
     {
-        $date = \DateTime::createFromFormat(
+        if ($data === null) {
+            throw new InvalidDataException('Date must be provided');
+        }
+
+        $date = DateTime::createFromFormat(
             $this->format,
             $data,
             $this->remoteTimezone
@@ -50,7 +56,7 @@ class DateNormalizer extends BaseDenormalizer implements NormalizerInterface
     }
 
     /**
-     * @param \DateTime $entity
+     * @param DateTime $entity
      * @return string
      */
     public function mapFromEntity($entity)
@@ -67,6 +73,6 @@ class DateNormalizer extends BaseDenormalizer implements NormalizerInterface
 
     protected function getLocalTimezone()
     {
-        return new \DateTimeZone(date_default_timezone_get());
+        return new DateTimeZone(date_default_timezone_get());
     }
 }

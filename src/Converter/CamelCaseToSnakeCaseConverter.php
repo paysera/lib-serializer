@@ -13,7 +13,7 @@ class CamelCaseToSnakeCaseConverter implements PropertyPathConverterInterface
                 preg_replace(
                     '/[A-Z]/u',
                     '_$0',
-                    $path
+                    $path ?? ''
                 )
             ),
             '_'

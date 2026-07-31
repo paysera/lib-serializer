@@ -4,6 +4,7 @@ namespace Paysera\Component\Serializer\Normalizer;
 
 use Paysera\Component\Serializer\Accessor\FieldAccessorInterface;
 use Paysera\Component\Serializer\Entity\NormalizationContextInterface;
+use Paysera\Component\Serializer\Exception\InvalidDataException;
 use Paysera\Component\Serializer\Factory\ContextAwareNormalizerFactory;
 use Paysera\Component\Serializer\Filter\FieldsFilter;
 use Paysera\Component\Serializer\Filter\FieldsParser;
@@ -16,12 +17,12 @@ class DistributedNormalizer implements DenormalizerInterface, ContextAwareNormal
     protected $factory;
 
     /**
-     * @var \Paysera\Component\Serializer\Filter\FieldsFilter
+     * @var FieldsFilter
      */
     protected $fieldsFilter;
 
     /**
-     * @var \Paysera\Component\Serializer\Filter\FieldsParser
+     * @var FieldsParser
      */
     protected $fieldsParser;
 
@@ -33,23 +34,23 @@ class DistributedNormalizer implements DenormalizerInterface, ContextAwareNormal
     /**
      * @var FieldAccessorInterface[]
      */
-    protected $fieldAccessors = array();
+    protected $fieldAccessors = [];
 
     /**
      * @var array of boolean
      */
-    protected $fieldDefault = array();
+    protected $fieldDefault = [];
 
     /**
      * @var DenormalizerInterface[]|NormalizerInterface[]
      */
-    protected $fieldNormalizers = array();
+    protected $fieldNormalizers = [];
 
     /**
-     * @param \Paysera\Component\Serializer\Factory\ContextAwareNormalizerFactory $factory
-     * @param \Paysera\Component\Serializer\Filter\FieldsParser                   $fieldsParser
-     * @param \Paysera\Component\Serializer\Filter\FieldsFilter                   $fieldsFilter
-     * @param DenormalizerInterface|NormalizerInterface                       $normalizer
+     * @param ContextAwareNormalizerFactory             $factory
+     * @param FieldsParser                              $fieldsParser
+     * @param FieldsFilter                              $fieldsFilter
+     * @param DenormalizerInterface|NormalizerInterface $normalizer
      */
     public function __construct(
         ContextAwareNormalizerFactory $factory,
@@ -97,11 +98,11 @@ class DistributedNormalizer implements DenormalizerInterface, ContextAwareNormal
      *
      * @return mixed
      *
-     * @throws \Paysera\Component\Serializer\Exception\InvalidDataException
+     * @throws InvalidDataException
      */
     public function mapToEntity($data)
     {
-        $additional = array();
+        $additional = [];
         if (is_array($data)) {
             foreach ($data as $key => $value) {
                 if (
@@ -141,7 +142,7 @@ class DistributedNormalizer implements DenormalizerInterface, ContextAwareNormal
         }
 
         $fields = $context !== null ? $context->getFields() : null;
-        $scope = $context !== null ? $context->getScope() : array();
+        $scope = $context !== null ? $context->getScope() : [];
         $data = $this->fieldsFilter->filter($data, $fields, $scope);
 
         $fieldsConfig = $this->fieldsParser->parseFields($fields, $scope);

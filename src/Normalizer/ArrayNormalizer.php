@@ -3,6 +3,7 @@
 namespace Paysera\Component\Serializer\Normalizer;
 
 use Paysera\Component\Serializer\Entity\NormalizationContextInterface;
+use Paysera\Component\Serializer\Exception\InvalidDataException;
 
 class ArrayNormalizer implements DenormalizerInterface, ContextAwareNormalizerInterface
 {
@@ -28,11 +29,11 @@ class ArrayNormalizer implements DenormalizerInterface, ContextAwareNormalizerIn
      *
      * @return mixed
      *
-     * @throws \Paysera\Component\Serializer\Exception\InvalidDataException
+     * @throws InvalidDataException
      */
     public function mapToEntity($data)
     {
-        $result = array();
+        $result = [];
         if ($data !== null) {
             foreach ($data as $innerElement) {
                 $result[] = $this->innerMapper->mapToEntity($innerElement);
@@ -43,7 +44,7 @@ class ArrayNormalizer implements DenormalizerInterface, ContextAwareNormalizerIn
 
     public function mapFromEntity($entity, ?NormalizationContextInterface $context = null)
     {
-        $result = array();
+        $result = [];
         if ($entity !== null) {
             foreach ($entity as $innerElement) {
                 $result[] = $this->innerMapper->mapFromEntity($innerElement, $context);

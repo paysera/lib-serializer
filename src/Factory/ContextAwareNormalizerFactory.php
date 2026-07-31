@@ -4,21 +4,20 @@ namespace Paysera\Component\Serializer\Factory;
 
 use Paysera\Component\Serializer\Filter\FieldsFilter;
 use Paysera\Component\Serializer\Filter\FieldsParser;
+use Paysera\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Paysera\Component\Serializer\Normalizer\DenormalizerInterface;
 use Paysera\Component\Serializer\Normalizer\DistributedNormalizer;
-use Paysera\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Paysera\Component\Serializer\Normalizer\NormalizerInterface;
 
 class ContextAwareNormalizerFactory
 {
-
     /**
-     * @var \Paysera\Component\Serializer\Filter\FieldsFilter
+     * @var FieldsFilter
      */
     protected $fieldsFilter;
 
     /**
-     * @var \Paysera\Component\Serializer\Filter\FieldsParser
+     * @var FieldsParser
      */
     protected $fieldsParser;
 
@@ -44,4 +43,4 @@ class ContextAwareNormalizerFactory
             $normalizer
         );
     }
-} 
+}

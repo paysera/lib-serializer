@@ -2,6 +2,8 @@
 
 namespace Paysera\Component\Serializer\Normalizer;
 
+use ArrayObject;
+
 class AssociativeArrayNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     /**
@@ -28,7 +30,7 @@ class AssociativeArrayNormalizer implements DenormalizerInterface, NormalizerInt
      */
     public function mapFromEntity($entity)
     {
-        $result = new \ArrayObject();
+        $result = new ArrayObject();
         if ($entity !== null) {
             foreach ($entity as $key => $innerElement) {
                 $result[$key] = $this->innerMapper->mapFromEntity($innerElement);
@@ -46,7 +48,7 @@ class AssociativeArrayNormalizer implements DenormalizerInterface, NormalizerInt
      */
     public function mapToEntity($data)
     {
-        $result = array();
+        $result = [];
         if ($data !== null) {
             foreach ($data as $key => $innerElement) {
                 $result[$key] = $this->innerMapper->mapToEntity($innerElement);

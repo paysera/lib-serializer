@@ -63,7 +63,7 @@ abstract class BaseDenormalizer implements DenormalizerInterface
      *
      * @param $data
      * @param $keys
-     * @throws \Paysera\Component\Serializer\Exception\InvalidDataException
+     * @throws InvalidDataException
      */
     protected function checkOnlyOneKeyExists($data, $keys)
     {
@@ -81,4 +81,4 @@ abstract class BaseDenormalizer implements DenormalizerInterface
             }
         }
     }
-} 
+}

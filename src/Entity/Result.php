@@ -2,7 +2,13 @@
 
 namespace Paysera\Component\Serializer\Entity;
 
-class Result implements \IteratorAggregate, ResultInterface
+use ArrayIterator;
+use BadMethodCallException;
+use IteratorAggregate;
+use ReturnTypeWillChange;
+use Traversable;
+
+class Result implements IteratorAggregate, ResultInterface
 {
     /**
      * @var int
@@ -37,8 +43,7 @@ class Result implements \IteratorAggregate, ResultInterface
     /**
      * @var mixed[]
      */
-    protected $items;
-
+    protected $items = [];
 
     public function __construct(?Filter $filter = null)
     {
@@ -201,14 +206,14 @@ class Result implements \IteratorAggregate, ResultInterface
     /**
      * Try to calculate total result count, in case all results are fetched.
      *
-     * @param $resultCount
-     * @return null
-     * @throws \BadMethodCallException
+     * @param int $resultCount
+     * @return int|null the calculated total count, or null when it cannot be determined
+     * @throws BadMethodCallException
      */
     public function calculateTotalCount($resultCount)
     {
         if (!$this->getFilter()) {
-            throw new \BadMethodCallException('filter must be set before calling this method');
+            throw new BadMethodCallException('filter must be set before calling this method');
         }
 
         if (
@@ -226,10 +231,11 @@ class Result implements \IteratorAggregate, ResultInterface
     /**
      * Retrieve an external iterator
      *
-     * @return \Traversable
+     * @return Traversable
      */
+    #[ReturnTypeWillChange]
     public function getIterator()
     {
-        return new \ArrayIterator($this->items);
+        return new ArrayIterator($this->items);
     }
 }

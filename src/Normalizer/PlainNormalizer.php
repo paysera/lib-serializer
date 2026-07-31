@@ -2,6 +2,8 @@
 
 namespace Paysera\Component\Serializer\Normalizer;
 
+use Paysera\Component\Serializer\Exception\InvalidDataException;
+
 class PlainNormalizer implements NormalizerInterface, DenormalizerInterface
 {
     /**
@@ -23,7 +25,7 @@ class PlainNormalizer implements NormalizerInterface, DenormalizerInterface
      *
      * @return mixed
      *
-     * @throws \Paysera\Component\Serializer\Exception\InvalidDataException
+     * @throws InvalidDataException
      */
     public function mapToEntity($data)
     {

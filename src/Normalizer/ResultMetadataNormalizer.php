@@ -6,7 +6,6 @@ use Paysera\Component\Serializer\Entity\Result;
 
 class ResultMetadataNormalizer implements NormalizerInterface
 {
-
     /**
      * Maps some structure to raw data. Usually entity object to array
      *
@@ -18,10 +17,10 @@ class ResultMetadataNormalizer implements NormalizerInterface
     {
         $filter = $result->getFilter();
 
-        $data = array(
+        $data = [
             'total' => $result->getTotalCount(),
             'limit' => $filter ? $filter->getLimit() : null,
-        );
+        ];
 
         if ($result->getAfter() !== null) {
             $data['cursors']['after'] = $result->getAfter();

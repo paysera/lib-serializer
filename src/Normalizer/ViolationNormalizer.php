@@ -37,7 +37,7 @@ class ViolationNormalizer extends BaseDenormalizer implements NormalizerInterfac
      */
     public function mapFromEntity($entity)
     {
-        $data = array();
+        $data = [];
         if ($entity->getCode() !== null) {
             $data['code'] = $entity->getCode();
         }

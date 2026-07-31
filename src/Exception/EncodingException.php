@@ -2,6 +2,8 @@
 
 namespace Paysera\Component\Serializer\Exception;
 
-class EncodingException extends \Exception
+use Exception;
+
+class EncodingException extends Exception
 {
 }

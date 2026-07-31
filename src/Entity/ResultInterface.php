@@ -2,7 +2,9 @@
 
 namespace Paysera\Component\Serializer\Entity;
 
-interface ResultInterface extends \Traversable
+use Traversable;
+
+interface ResultInterface extends Traversable
 {
     /**
      * Gets totalCount

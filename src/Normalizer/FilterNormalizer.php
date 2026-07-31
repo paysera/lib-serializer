@@ -11,7 +11,7 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
     protected $maxLimit;
     protected $orderByFields;
 
-    public function __construct($orderByFields = array(), $defaultLimit = 20, $maxLimit = 200)
+    public function __construct($orderByFields = [], $defaultLimit = 20, $maxLimit = 200)
     {
         $this->defaultLimit = $defaultLimit;
         $this->maxLimit = $maxLimit;
@@ -25,7 +25,7 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
      *
      * @return mixed
      *
-     * @throws \Paysera\Component\Serializer\Exception\InvalidDataException
+     * @throws InvalidDataException
      */
     public function mapToEntity($data)
     {
@@ -41,7 +41,7 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
      */
     public function mapFromEntity($entity)
     {
-        $data = array();
+        $data = [];
         if ($entity->getLimit() !== null) {
             $data['limit'] = $entity->getLimit();
         }
@@ -124,7 +124,7 @@ class FilterNormalizer extends BaseDenormalizer implements NormalizerInterface
                 throw new InvalidDataException('order_direction is unsupported for this method');
             }
             $orderDirection = strtoupper($orderDirection);
-            if (!in_array($orderDirection, array('ASC', 'DESC'))) {
+            if (!in_array($orderDirection, ['ASC', 'DESC'])) {
                 throw new InvalidDataException('Invalid order_direction value');
             }
             $filter->setOrderAsc($orderDirection === 'ASC');

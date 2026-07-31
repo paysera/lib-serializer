@@ -7,7 +7,6 @@ use JsonpCallbackValidator;
 
 class Jsonp implements EncoderInterface
 {
-
     protected $jsonEncoder;
 
     protected $callbackValidator;
@@ -57,10 +56,10 @@ class Jsonp implements EncoderInterface
                 $this->jsonEncoder->decode($this->parameter);
             } catch (EncodingException $exception) {
                 $this->parameter = null;
-                $json = $this->jsonEncoder->encode(array(
+                $json = $this->jsonEncoder->encode([
                     'error' => 'invalid_parameters',
                     'error_description' => 'Passed parameter must be valid JSON string',
-                ));
+                ]);
             }
         }
 

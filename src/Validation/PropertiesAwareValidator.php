@@ -53,8 +53,8 @@ class PropertiesAwareValidator
         }
 
         if ($violationList->count() > 0) {
-            $properties = array();
-            $violations = array();
+            $properties = [];
+            $violations = [];
 
             foreach ($violationList as $violation) {
                 $path = $violation->getPropertyPath();

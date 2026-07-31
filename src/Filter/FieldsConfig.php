@@ -55,7 +55,7 @@ class FieldsConfig
             }
             return $extensions;
         } else {
-            return $this->defaultsIncluded ? array('*') : array();
+            return $this->defaultsIncluded ? ['*'] : [];
         }
     }
 
@@ -66,4 +66,4 @@ class FieldsConfig
     {
         return $this->defaultsIncluded;
     }
-} 
+}
