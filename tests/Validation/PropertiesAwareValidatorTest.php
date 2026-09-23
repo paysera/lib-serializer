@@ -8,11 +8,13 @@ use Paysera\Component\Serializer\Exception\InvalidDataException;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\Account;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\Beneficiary;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\CodedValues;
+use Paysera\Component\Serializer\Tests\Fixtures\Validation\ConstantNamedConstraint;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\GroupedAccount;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\PropertyNamedConstraint;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\UnnamedConstraint;
 use Paysera\Component\Serializer\Validation\PropertiesAwareValidator;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use stdClass;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintViolation;
@@ -29,9 +31,9 @@ class PropertiesAwareValidatorTest extends TestCase
     {
         $validator = new PropertiesAwareValidator($this->createSymfonyValidator(), new CamelCaseToSnakeCaseConverter());
 
-        $validator->validate(new Account('LT12 1000 0111 0100 1000', '', new Beneficiary('Jane Doe')));
+        $this->expectNotToPerformAssertions();
 
-        $this->addToAssertionCount(1);
+        $validator->validate(new Account('LT12 1000 0111 0100 1000', '', new Beneficiary('Jane Doe')));
     }
 
     public function testViolationsAreReportedByConvertedPropertyPath()
@@ -52,9 +54,9 @@ class PropertiesAwareValidatorTest extends TestCase
         );
         $this->assertSame(
             [
-                'account_number' => ['This value should not be blank.', 'is_blank'],
-                'beneficiary.full_name' => ['This value should not be blank.', 'is_blank'],
-                'nickname' => ['This value should be blank.', 'not_blank'],
+                ['account_number', 'This value should not be blank.', 'is_blank'],
+                ['beneficiary.full_name', 'This value should not be blank.', 'is_blank'],
+                ['nickname', 'This value should be blank.', 'not_blank'],
             ],
             $this->describeViolations($exception->getViolations())
         );
@@ -77,15 +79,22 @@ class PropertiesAwareValidatorTest extends TestCase
 
         $exception = $this->validateAndCatch($validator, new CodedValues());
 
-        // Symfony reads `$errorNames` up to 6.4 and only the `ERROR_NAMES` constant on 7.x, so a constraint that names
-        // its errors the old way only reports its raw code there.
-        $propertyNamedCode = property_exists(Constraint::class, 'errorNames') ? 'failure' : PropertyNamedConstraint::FAILURE_ERROR;
+        // Symfony reads the `$errorNames` property up to 6.4 and the `ERROR_NAMES` constant since 6.1, so a constraint
+        // that names its errors only one way reports its raw code on the lines that do not read that way.
+        $symfony = new ReflectionClass(Constraint::class);
+        $propertyNamedCode = $symfony->hasProperty('errorNames')
+            ? 'failure'
+            : PropertyNamedConstraint::FAILURE_ERROR;
+        $constantNamedCode = $symfony->hasConstant('ERROR_NAMES')
+            ? 'failure'
+            : ConstantNamedConstraint::FAILURE_ERROR;
         $this->assertSame(
             [
-                'dual_named' => ['Dual named failure.', 'failure'],
-                'property_named' => ['Property named failure.', $propertyNamedCode],
-                'uncoded' => ['Unnamed failure.', null],
-                'unnamed' => ['Unnamed failure.', UnnamedConstraint::FAILURE_ERROR],
+                ['constant_named', 'Constant named failure.', $constantNamedCode],
+                ['dual_named', 'Dual named failure.', 'failure'],
+                ['property_named', 'Property named failure.', $propertyNamedCode],
+                ['uncoded', 'Unnamed failure.', null],
+                ['unnamed', 'Unnamed failure.', UnnamedConstraint::FAILURE_ERROR],
             ],
             $this->describeViolations($exception->getViolations())
         );
@@ -112,7 +121,16 @@ class PropertiesAwareValidatorTest extends TestCase
                 $this->calls[] = [$entity, $groups];
 
                 return new ConstraintViolationList([
-                    new ConstraintViolation('First message.', 'First message.', [], $entity, 'someField', 1, null, 'CODE_WITHOUT_CONSTRAINT'),
+                    new ConstraintViolation(
+                        'First message.',
+                        'First message.',
+                        [],
+                        $entity,
+                        'someField',
+                        1,
+                        null,
+                        'CODE_WITHOUT_CONSTRAINT'
+                    ),
                     new ConstraintViolation('Second message.', 'Second message.', [], $entity, 'someField', 1),
                 ]);
             }
@@ -149,15 +167,14 @@ class PropertiesAwareValidatorTest extends TestCase
     /**
      * @param Violation[] $violations
      *
-     * @return array field => [message, code], sorted by field
+     * @return array[] one [field, message, code] per violation, sorted, so a duplicate violation stays visible
      */
     private function describeViolations(array $violations)
     {
-        $described = [];
-        foreach ($violations as $violation) {
-            $described[$violation->getField()] = [$violation->getMessage(), $violation->getCode()];
-        }
-        ksort($described);
+        $described = array_map(function (Violation $violation) {
+            return [$violation->getField(), $violation->getMessage(), $violation->getCode()];
+        }, $violations);
+        sort($described);
 
         return $described;
     }

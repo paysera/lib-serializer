@@ -59,7 +59,11 @@ class DistributedNormalizerTest extends TestCase
 
         $normalizer = $this->createDistributedNormalizer($inner);
         $normalizer->addField('tags', new PublicPropertyFieldAccessor('tags'), new PlainNormalizer());
-        $normalizer->addAdditionalField('code', new PublicPropertyFieldAccessor('code'), new PlainItemNormalizer('value'));
+        $normalizer->addAdditionalField(
+            'code',
+            new PublicPropertyFieldAccessor('code'),
+            new PlainItemNormalizer('value')
+        );
 
         $this->assertSame(
             $entity,

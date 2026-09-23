@@ -6,7 +6,7 @@ use Symfony\Component\Validator\Constraint;
 
 /**
  * Names its error both ways: the `ERROR_NAMES` constant Symfony reads since 6.1 (the only one on 7.x) and the
- * `$errorNames` property Symfony read before 6.1.
+ * `$errorNames` property Symfony reads up to 6.4 (the only one up to 6.0).
  */
 class DualNamedConstraint extends Constraint
 {

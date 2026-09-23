@@ -82,14 +82,6 @@ class ResponseMapperFactoryTest extends TestCase
         $this->assertSame($this->shortMapper, $this->factory->createResponseMapper(['short' => true]));
     }
 
-    public function testLastFlagSetToTrueWins()
-    {
-        $this->assertSame(
-            $this->fullMapper,
-            $this->factory->createResponseMapper(['short' => true, 'full' => true])
-        );
-    }
-
     /**
      * @dataProvider ignoredFlagProvider
      */

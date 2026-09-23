@@ -29,7 +29,8 @@ class JsonpTest extends TestCase
         $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), 'handle', 'not json');
 
         $this->assertSame(
-            '/**/handle({"error":"invalid_parameters","error_description":"Passed parameter must be valid JSON string"});',
+            '/**/handle({"error":"invalid_parameters",'
+            . '"error_description":"Passed parameter must be valid JSON string"});',
             $encoder->encode(['a' => 1])
         );
     }

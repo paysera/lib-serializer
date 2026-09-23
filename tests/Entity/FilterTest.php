@@ -45,7 +45,7 @@ class FilterTest extends TestCase
         $this->assertSame(10, (new FollowUpFilter(5, 10))->getOffset());
     }
 
-    public function testOrderingDefaultsToNothing()
+    public function testUnsetOrderingIsNullWithDescendingDirection()
     {
         $filter = new Filter();
 
