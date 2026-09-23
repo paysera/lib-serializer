@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.6.0
+### Added
+- Symfony 7 support: `symfony/property-access` and `symfony/validator` also allow `^7.4`. On
+  Symfony 7 a constraint's error name is read only from its `ERROR_NAMES` constant, so a custom
+  constraint that names its errors only in the `$errorNames` property is reported by
+  `PropertiesAwareValidator` with its raw code instead of its name; declare `ERROR_NAMES` (both
+  work side by side on older Symfony versions).
+- Tests for every class. `PropertiesAwareValidator` and `PropertyPathFieldAccessor` are tested
+  against Symfony's real validator and property accessor, so each Symfony version in the test
+  matrix runs the code that calls Symfony.
+
+### Changed
+- `symfony/validator` releases below 3.1.9 on the 3.1 line and below 3.2.2 on the 3.2 line (and
+  all of 3.0) fail on PHP 7.2 and later when validating an object, so they could not work with
+  this library's PHP 7.4 floor; they are no longer allowed.
+
 ## 3.5.0
 ### Changed
 - `DateNormalizer::mapToEntity()` rejects `null` up front instead of passing it to
