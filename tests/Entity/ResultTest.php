@@ -2,6 +2,8 @@
 
 namespace Paysera\Component\Serializer\Tests\Entity;
 
+use BadMethodCallException;
+use Paysera\Component\Serializer\Entity\Filter;
 use Paysera\Component\Serializer\Entity\Result;
 use Paysera\Component\Serializer\Tests\Fixtures\OwnConstructorFilter;
 use PHPUnit\Framework\TestCase;
@@ -101,5 +103,77 @@ class ResultTest extends TestCase
         );
 
         $this->assertContains(ReturnTypeWillChange::class, $attributes);
+    }
+
+    public function testCalculateTotalCountThrowsWithoutFilter()
+    {
+        $this->expectException(BadMethodCallException::class);
+        $this->expectExceptionMessage('filter must be set before calling this method');
+
+        (new Result())->calculateTotalCount(5);
+    }
+
+    /**
+     * @dataProvider calculatedTotalCountProvider
+     */
+    public function testCalculateTotalCountWhenAllResultsAreFetched(Filter $filter, $resultCount, $expected)
+    {
+        $result = new Result($filter);
+
+        $this->assertSame($expected, $result->calculateTotalCount($resultCount));
+        $this->assertSame($expected, $result->getTotalCount());
+    }
+
+    public static function calculatedTotalCountProvider()
+    {
+        return [
+            'no limit' => [(new Filter())->setOffset(10), 5, 15],
+            'fewer results than limit' => [(new Filter())->setOffset(10)->setLimit(20), 5, 15],
+            'no results on first page' => [(new Filter())->setLimit(20), 0, 0],
+        ];
+    }
+
+    /**
+     * @dataProvider undeterminedTotalCountProvider
+     */
+    public function testCalculateTotalCountReturnsNullWhenTotalIsUnknown(Filter $filter, $resultCount)
+    {
+        $result = (new Result($filter))->setTotalCount(99);
+
+        $this->assertNull($result->calculateTotalCount($resultCount));
+        $this->assertSame(99, $result->getTotalCount());
+    }
+
+    public static function undeterminedTotalCountProvider()
+    {
+        return [
+            'page is full' => [(new Filter())->setLimit(20), 20],
+            'cursor is used' => [(new Filter())->setAfter('cursor'), 5],
+            'no results past first page' => [(new Filter())->setOffset(40)->setLimit(20), 0],
+        ];
+    }
+
+    public function testCursorsAndFlags()
+    {
+        $filter = new Filter();
+        $result = new Result($filter);
+
+        $this->assertSame($filter, $result->getFilter());
+        $this->assertNull($result->hasNext());
+        $this->assertNull($result->hasPrevious());
+        $this->assertNull($result->getAfter());
+        $this->assertNull($result->getBefore());
+
+        $result->setHasNext(true)->setHasPrevious(false)->setAfter('a')->setBefore('b');
+
+        $this->assertTrue($result->hasNext());
+        $this->assertFalse($result->hasPrevious());
+        $this->assertSame('a', $result->getAfter());
+        $this->assertSame('b', $result->getBefore());
+    }
+
+    public function testSetTotalCountCastsToInteger()
+    {
+        $this->assertSame(12, (new Result())->setTotalCount('12')->getTotalCount());
     }
 }

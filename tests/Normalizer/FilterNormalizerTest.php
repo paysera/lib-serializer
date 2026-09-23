@@ -195,4 +195,95 @@ class FilterNormalizerTest extends TestCase
             ],
         ];
     }
+
+    public function testMapFromEntityIncludesOrdering()
+    {
+        $this->assertSame(
+            ['offset' => 0, 'order_by' => 'name', 'order_direction' => 'asc'],
+            (new FilterNormalizer())->mapFromEntity((new Filter())->setOrderBy('name')->setOrderAsc(true))
+        );
+        $this->assertSame(
+            ['offset' => 0, 'order_direction' => 'desc'],
+            (new FilterNormalizer())->mapFromEntity((new Filter())->setOrderAsc(false))
+        );
+    }
+
+    public function testMapToEntityCastsNumericStringsAndMapsOrdering()
+    {
+        $filter = (new FilterNormalizer(['name', 'created_at']))->mapToEntity([
+            'limit' => '15',
+            'offset' => '30',
+            'order_by' => 'created_at',
+            'order_direction' => 'asc',
+        ]);
+
+        $this->assertSame(15, $filter->getLimit());
+        $this->assertSame(30, $filter->getOffset());
+        $this->assertSame('created_at', $filter->getOrderBy());
+        $this->assertTrue($filter->isOrderAsc());
+    }
+
+    public function testMapToEntityAcceptsOrderDirectionInAnyCase()
+    {
+        $this->assertFalse((new FilterNormalizer(['name']))->mapToEntity(['order_direction' => 'DeSc'])->isOrderAsc());
+    }
+
+    public function testMapToEntityAcceptsLimitBoundaries()
+    {
+        $this->assertSame(0, (new FilterNormalizer())->mapToEntity(['limit' => 0])->getLimit());
+        $this->assertSame(200, (new FilterNormalizer())->mapToEntity(['limit' => 200])->getLimit());
+    }
+
+    public function testMapToEntityUsesConfiguredLimits()
+    {
+        $normalizer = new FilterNormalizer([], 10, 50);
+
+        $this->assertSame(10, $normalizer->mapToEntity([])->getLimit());
+
+        $this->expectException(InvalidDataException::class);
+        $this->expectExceptionMessage('limit cannot exceed 50');
+        $normalizer->mapToEntity(['limit' => 51]);
+    }
+
+    public function testMapToEntityIgnoresEmptyOrdering()
+    {
+        $filter = (new FilterNormalizer())->mapToEntity(['order_by' => '', 'order_direction' => '']);
+
+        $this->assertNull($filter->getOrderBy());
+        $this->assertNull($filter->isOrderAsc());
+    }
+
+    public function testMapToEntityRejectsOrderDirectionWithoutOrderByFields()
+    {
+        $this->expectException(InvalidDataException::class);
+        $this->expectExceptionMessage('order_direction is unsupported for this method');
+
+        (new FilterNormalizer())->mapToEntity(['order_direction' => 'asc']);
+    }
+
+    /**
+     * @dataProvider invalidDataProvider
+     */
+    public function testMapToEntityRejectsInvalidData(array $data, $message)
+    {
+        $this->expectException(InvalidDataException::class);
+        $this->expectExceptionMessage($message);
+
+        (new FilterNormalizer(['name']))->mapToEntity($data);
+    }
+
+    public static function invalidDataProvider()
+    {
+        return [
+            'cursor with offset' => [['after' => 'a', 'offset' => 1], 'Only one cursor is supported'],
+            'non-numeric limit' => [['limit' => 'ten'], 'Invalid parameter: limit'],
+            'fractional limit' => [['limit' => '1.5'], 'Invalid parameter: limit'],
+            'limit above maximum' => [['limit' => 201], 'limit cannot exceed 200'],
+            'negative limit' => [['limit' => -1], 'limit cannot be negative'],
+            'non-numeric offset' => [['offset' => 'first'], 'Invalid parameter: offset'],
+            'negative offset' => [['offset' => '-5'], 'offset cannot be negative'],
+            'unsupported order_by' => [['order_by' => 'email'], 'Unsupported order_by value'],
+            'invalid order_direction' => [['order_direction' => 'up'], 'Invalid order_direction value'],
+        ];
+    }
 }

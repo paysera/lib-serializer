@@ -44,4 +44,40 @@ class FilterTest extends TestCase
     {
         $this->assertSame(10, (new FollowUpFilter(5, 10))->getOffset());
     }
+
+    public function testOrderingDefaultsToNothing()
+    {
+        $filter = new Filter();
+
+        $this->assertNull($filter->getOrderBy());
+        $this->assertNull($filter->isOrderAsc());
+        $this->assertSame('DESC', $filter->getOrderDirection());
+    }
+
+    public function testOrderingSettersAreFluent()
+    {
+        $filter = new Filter();
+
+        $this->assertSame($filter, $filter->setOrderBy('created_at'));
+        $this->assertSame($filter, $filter->setOrderAsc(true));
+        $this->assertSame('created_at', $filter->getOrderBy());
+        $this->assertTrue($filter->isOrderAsc());
+    }
+
+    public function testOrderDirection()
+    {
+        $this->assertSame('ASC', (new Filter())->setOrderAsc(true)->getOrderDirection());
+        $this->assertSame('DESC', (new Filter())->setOrderAsc(false)->getOrderDirection());
+    }
+
+    public function testCreateReturnsNewInstanceOfCalledClass()
+    {
+        $filter = Filter::create();
+        $subclassFilter = OwnConstructorFilter::create();
+
+        $this->assertInstanceOf(Filter::class, $filter);
+        $this->assertNotSame($filter, Filter::create());
+        $this->assertInstanceOf(OwnConstructorFilter::class, $subclassFilter);
+        $this->assertSame(0, $subclassFilter->getOffset());
+    }
 }

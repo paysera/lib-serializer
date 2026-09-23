@@ -92,4 +92,22 @@ class DateNormalizerTest extends TestCase
 
         $this->assertSame([], $deprecations);
     }
+
+    public function testMapToEntity_unparseable_date_throws_exception()
+    {
+        $service = new DateNormalizer('Y-m-d H:i:s', new DateTimeZone('Etc/GMT+0'));
+
+        $this->expectException(InvalidDataException::class);
+        $this->expectExceptionMessage('Provided date format is invalid');
+        $service->mapToEntity('not a date');
+    }
+
+    public function testMapToEntity_overflowing_date_throws_parsed_date_invalid()
+    {
+        $service = new DateNormalizer('Y-m-d H:i:s', new DateTimeZone('Etc/GMT+0'));
+
+        $this->expectException(InvalidDataException::class);
+        $this->expectExceptionMessage('The parsed date was invalid');
+        $service->mapToEntity('2013-02-31 12:00:00');
+    }
 }

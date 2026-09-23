@@ -3,8 +3,14 @@
 namespace Paysera\Component\Serializer\Tests\Normalizer;
 
 use Paysera\Component\Serializer\Entity\Filter;
+use Paysera\Component\Serializer\Entity\NormalizationContext;
 use Paysera\Component\Serializer\Entity\Result;
+use Paysera\Component\Serializer\Factory\ContextAwareNormalizerFactory;
+use Paysera\Component\Serializer\Filter\FieldsFilter;
+use Paysera\Component\Serializer\Filter\FieldsParser;
+use Paysera\Component\Serializer\Normalizer\PlainItemNormalizer;
 use Paysera\Component\Serializer\Normalizer\PlainNormalizer;
+use Paysera\Component\Serializer\Normalizer\ResultMetadataNormalizer;
 use Paysera\Component\Serializer\Normalizer\ResultNormalizer;
 use PHPUnit\Framework\TestCase;
 
@@ -75,5 +81,59 @@ class ResultNormalizerTest extends TestCase
                 ,
             ],
         ];
+    }
+
+    public function testMapToEntityMapsItemsWithItemNormalizer()
+    {
+        $result = (new ResultNormalizer('payments', new PlainItemNormalizer('id')))->mapToEntity([
+            'payments' => [['id' => 1], ['id' => 2]],
+        ]);
+
+        $this->assertSame([1, 2], $result->getItems());
+        $this->assertEquals(new Filter(), $result->getFilter());
+    }
+
+    public function testMapFromEntityRendersItemsAndMetadata()
+    {
+        $result = (new Result((new Filter())->setLimit(2)))
+            ->setTotalCount(5)
+            ->setItems([['id' => 1], ['id' => 2]])
+        ;
+        $normalizer = new ResultNormalizer('payments', new PlainNormalizer());
+
+        $this->assertSame($normalizer, $normalizer->setMetadataNormalizer(new ResultMetadataNormalizer()));
+        $this->assertSame(
+            [
+                'payments' => [['id' => 1], ['id' => 2]],
+                '_metadata' => ['total' => 5, 'limit' => 2, 'offset' => 0],
+            ],
+            $normalizer->mapFromEntity($result)
+        );
+    }
+
+    /**
+     * Items are normalized in a context scoped to the items key; metadata is not filtered.
+     */
+    public function testMapFromEntityScopesContextToItemsKey()
+    {
+        $fieldsParser = new FieldsParser();
+        $itemNormalizer = (new ContextAwareNormalizerFactory($fieldsParser, new FieldsFilter($fieldsParser)))
+            ->create(new PlainNormalizer());
+        $result = (new Result(new Filter()))
+            ->setTotalCount(2)
+            ->setItems([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']])
+        ;
+        $context = (new NormalizationContext())->setFields(['payments.id']);
+
+        $normalizer = (new ResultNormalizer('payments', $itemNormalizer))
+            ->setMetadataNormalizer(new ResultMetadataNormalizer());
+
+        $this->assertSame(
+            [
+                'payments' => [['id' => 1], ['id' => 2]],
+                '_metadata' => ['total' => 2, 'limit' => null, 'offset' => 0],
+            ],
+            $normalizer->mapFromEntity($result, $context)
+        );
     }
 }
