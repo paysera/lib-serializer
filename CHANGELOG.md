@@ -6,19 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 3.6.0
 ### Added
-- Symfony 7 support: `symfony/property-access` and `symfony/validator` also allow `^7.4`. On
-  Symfony 7 a constraint's error name is read only from its `ERROR_NAMES` constant, so a custom
-  constraint that names its errors only in the `$errorNames` property is reported by
-  `PropertiesAwareValidator` with its raw code instead of its name; declare `ERROR_NAMES` (both
-  work side by side on older Symfony versions).
+- Symfony 7 support: `symfony/property-access` and `symfony/validator` also allow `^7.4`, the
+  long-term-support release of Symfony 7 (7.0 to 7.3 are no longer maintained). On Symfony 7 a
+  constraint's error name is read only from its `ERROR_NAMES` constant, so a custom constraint
+  that names its errors only in the `$errorNames` property is reported by
+  `PropertiesAwareValidator` with its raw code. Declare `ERROR_NAMES`, and keep `$errorNames`
+  next to it while you support Symfony below 6.1, which reads only the property (6.1 to 6.4 read
+  both).
 - Tests for every class. `PropertiesAwareValidator` and `PropertyPathFieldAccessor` are tested
   against Symfony's real validator and property accessor, so each Symfony version in the test
   matrix runs the code that calls Symfony.
 
-### Changed
-- `symfony/validator` releases below 3.1.9 on the 3.1 line and below 3.2.2 on the 3.2 line (and
-  all of 3.0) fail on PHP 7.2 and later when validating an object, so they could not work with
-  this library's PHP 7.4 floor; they are no longer allowed.
+### Removed
+- `symfony/validator` 3.0.x, 3.1.0 to 3.1.8 and 3.2.0 to 3.2.1. When a validated property holds
+  an array or an object under `Valid`, they call `count()` on `null`: a warning on PHP 7.4 and a
+  `TypeError` on PHP 8. Projects locked to one of them stay on 3.5.x.
 
 ## 3.5.0
 ### Changed
