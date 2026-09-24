@@ -9,7 +9,7 @@ use Symfony\Component\Validator\Constraint;
  */
 class UnnamedConstraint extends Constraint
 {
-    const FAILURE_ERROR = '8b3c4d5e-3333-4a5b-8c9d-0e1f2a3b4c5d';
+    public const FAILURE_ERROR = '8b3c4d5e-3333-4a5b-8c9d-0e1f2a3b4c5d';
 
     public $message = 'Unnamed failure.';
 

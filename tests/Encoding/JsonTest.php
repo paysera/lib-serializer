@@ -25,7 +25,8 @@ class JsonTest extends TestCase
     public function testDecodeThrowsOnInvalidJson()
     {
         $this->expectException(EncodingException::class);
-        $this->expectExceptionMessage('Cannot decode the data. Error: ' . JSON_ERROR_SYNTAX);
+        // The message carries the input that failed to decode; dropping it would change what callers log.
+        $this->expectExceptionMessage('Cannot decode the data. Error: ' . JSON_ERROR_SYNTAX . ', JSON: {"a":');
 
         (new Json())->decode('{"a":');
     }

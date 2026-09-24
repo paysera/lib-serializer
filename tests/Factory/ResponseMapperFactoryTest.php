@@ -83,6 +83,22 @@ class ResponseMapperFactoryTest extends TestCase
     }
 
     /**
+     * Records current behaviour, which nothing documents: when several flags are true, the one listed last in the
+     * options wins, whatever order the mappers were added in.
+     */
+    public function testWhenSeveralFlagsAreTrueTheLastListedWins()
+    {
+        $this->assertSame(
+            $this->fullMapper,
+            $this->factory->createResponseMapper(['short' => true, 'full' => true])
+        );
+        $this->assertSame(
+            $this->shortMapper,
+            $this->factory->createResponseMapper(['full' => true, 'short' => true])
+        );
+    }
+
+    /**
      * @dataProvider ignoredFlagProvider
      */
     public function testFlagsThatAreNotStrictlyTrueOrUnknownAreIgnored(array $options)

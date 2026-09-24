@@ -10,7 +10,7 @@ use Symfony\Component\Validator\Constraint;
  */
 class DualNamedConstraint extends Constraint
 {
-    const FAILURE_ERROR = '6f1b2c3d-1111-4a5b-8c9d-0e1f2a3b4c5d';
+    public const FAILURE_ERROR = '6f1b2c3d-1111-4a5b-8c9d-0e1f2a3b4c5d';
 
     protected const ERROR_NAMES = [self::FAILURE_ERROR => 'FAILURE_ERROR'];
 

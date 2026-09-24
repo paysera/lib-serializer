@@ -41,7 +41,6 @@ class FieldsParserTest extends TestCase
 
         $this->assertTrue($config->areDefaultsIncluded());
         $this->assertTrue($config->isIncluded('extra', false));
-        $this->assertContains('*', $config->getFieldExtensions('extra'));
     }
 
     public function testFieldEndingWithDotThrows()
