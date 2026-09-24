@@ -25,7 +25,8 @@ class JsonTest extends TestCase
     public function testDecodeThrowsOnInvalidJson()
     {
         $this->expectException(EncodingException::class);
-        // The message carries the input that failed to decode; dropping it would change what callers log.
+        // Records current behaviour: the message carries the input that failed to decode. Dropping or redacting it
+        // (the input can hold personal data) is a deliberate change that updates this line.
         $this->expectExceptionMessage('Cannot decode the data. Error: ' . JSON_ERROR_SYNTAX . ', JSON: {"a":');
 
         (new Json())->decode('{"a":');

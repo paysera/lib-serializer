@@ -43,6 +43,13 @@ class FieldsParserTest extends TestCase
         $this->assertTrue($config->isIncluded('extra', false));
     }
 
+    public function testSubfieldsOfAListedFieldSurviveTheWildcard()
+    {
+        $config = (new FieldsParser())->parseFields(['*', 'owner.secret'], ['owner']);
+
+        $this->assertTrue($config->isIncluded('secret', false));
+    }
+
     public function testFieldEndingWithDotThrows()
     {
         $this->expectException(InvalidArgumentException::class);
