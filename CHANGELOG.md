@@ -20,8 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - `symfony/validator` 3.0.x, 3.1.0 to 3.1.8 and 3.2.0 to 3.2.1. When a validated property holds
   an array or an object under `Valid`, they call `count()` on `null`, which PHP 7.4 reports as a
-  warning; on PHP 8 the older of them do not compile at all and the rest throw a `TypeError`.
-  Projects locked to one of them stay on 3.5.x.
+  warning; on PHP 8, 3.0.x and 3.1.0 to 3.1.6 cannot be compiled and 3.1.7 to 3.2.1 throw a
+  `TypeError`. Projects locked to one of them stay on 3.5.x.
 
 ## 3.5.0
 ### Changed
