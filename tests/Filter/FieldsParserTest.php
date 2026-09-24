@@ -45,9 +45,10 @@ class FieldsParserTest extends TestCase
 
     public function testSubfieldsOfAListedFieldSurviveTheWildcard()
     {
-        $config = (new FieldsParser())->parseFields(['*', 'owner.secret'], ['owner']);
+        $parser = new FieldsParser();
 
-        $this->assertTrue($config->isIncluded('secret', false));
+        $this->assertTrue($parser->parseFields(['*', 'owner.secret'], ['owner'])->isIncluded('secret', false));
+        $this->assertTrue($parser->parseFields(['owner.secret', '*'], ['owner'])->isIncluded('secret', false));
     }
 
     public function testFieldEndingWithDotThrows()
