@@ -9,48 +9,69 @@ use PHPUnit\Framework\TestCase;
 
 class InvalidDataExceptionTest extends TestCase
 {
-    public function testDefaults()
+    /**
+     * @dataProvider exceptionProvider
+     */
+    public function testGetters(InvalidDataException $exception, array $expected)
     {
-        $exception = new InvalidDataException();
-
-        $this->assertSame('', $exception->getMessage());
-        $this->assertSame(0, $exception->getCode());
-        $this->assertNull($exception->getCustomCode());
-        $this->assertNull($exception->getProperties());
-        $this->assertSame([], $exception->getViolations());
-        $this->assertNull($exception->getPrevious());
+        $this->assertSame(
+            $expected,
+            [
+                'message' => $exception->getMessage(),
+                'code' => $exception->getCode(),
+                'customCode' => $exception->getCustomCode(),
+                'properties' => $exception->getProperties(),
+                'violations' => $exception->getViolations(),
+                'previous' => $exception->getPrevious(),
+            ]
+        );
     }
 
-    public function testConstructorKeepsCustomCodeSeparateFromExceptionCode()
+    public static function exceptionProvider()
     {
         $previous = new Exception('cause');
-        $exception = new InvalidDataException('Invalid input', 'invalid_input', $previous);
+        $first = (new Violation())->setField('first');
+        $second = (new Violation())->setField('second');
+        $third = (new Violation())->setField('third');
+        $defaults = [
+            'message' => '',
+            'code' => 0,
+            'customCode' => null,
+            'properties' => null,
+            'violations' => [],
+            'previous' => null,
+        ];
 
-        $this->assertSame('Invalid input', $exception->getMessage());
-        $this->assertSame('invalid_input', $exception->getCustomCode());
-        $this->assertSame(0, $exception->getCode());
-        $this->assertSame($previous, $exception->getPrevious());
+        return [
+            'defaults' => [new InvalidDataException(), $defaults],
+            'custom code kept apart from the exception code' => [
+                new InvalidDataException('Invalid input', 'invalid_input', $previous),
+                array_merge(
+                    $defaults,
+                    ['message' => 'Invalid input', 'customCode' => 'invalid_input', 'previous' => $previous]
+                ),
+            ],
+            'properties set' => [
+                (new InvalidDataException())->setProperties(['email' => ['Invalid email']]),
+                array_merge($defaults, ['properties' => ['email' => ['Invalid email']]]),
+            ],
+            'violations replaced' => [
+                (new InvalidDataException())->addViolation($first)->setViolations([$second]),
+                array_merge($defaults, ['violations' => [$second]]),
+            ],
+            'violation appended' => [
+                (new InvalidDataException())->addViolation($first)->setViolations([$second])->addViolation($third),
+                array_merge($defaults, ['violations' => [$second, $third]]),
+            ],
+        ];
     }
 
-    public function testSetPropertiesIsFluent()
+    public function testSettersAreFluent()
     {
         $exception = new InvalidDataException();
 
         $this->assertSame($exception, $exception->setProperties(['email' => ['Invalid email']]));
-        $this->assertSame(['email' => ['Invalid email']], $exception->getProperties());
-    }
-
-    public function testSetViolationsReplacesAndAddViolationAppends()
-    {
-        $first = (new Violation())->setField('first');
-        $second = (new Violation())->setField('second');
-        $third = (new Violation())->setField('third');
-        $exception = (new InvalidDataException())->addViolation($first);
-
-        $this->assertSame($exception, $exception->setViolations([$second]));
-        $this->assertSame([$second], $exception->getViolations());
-
-        $this->assertSame($exception, $exception->addViolation($third));
-        $this->assertSame([$second, $third], $exception->getViolations());
+        $this->assertSame($exception, $exception->setViolations([]));
+        $this->assertSame($exception, $exception->addViolation(new Violation()));
     }
 }

@@ -3,52 +3,63 @@
 namespace Paysera\Component\Serializer\Tests\Filter;
 
 use InvalidArgumentException;
+use Paysera\Component\Serializer\Filter\FieldsConfig;
 use Paysera\Component\Serializer\Filter\FieldsParser;
 use PHPUnit\Framework\TestCase;
 
 class FieldsParserTest extends TestCase
 {
-    public function testNullFieldsIncludeDefaults()
+    /**
+     * @dataProvider unscopedFieldsProvider
+     */
+    public function testParseUnscopedFields(array $fields, FieldsConfig $expected)
     {
-        $config = (new FieldsParser())->parseFields(null);
-
-        $this->assertTrue($config->areDefaultsIncluded());
-        $this->assertSame(['*'], $config->getFieldExtensions('any'));
-        $this->assertFalse($config->isIncluded('any', false));
+        $this->assertEquals($expected, (new FieldsParser())->parseUnscopedFields($fields));
     }
 
-    public function testParseFieldsWithoutArgumentsIncludesDefaults()
+    public static function unscopedFieldsProvider()
     {
-        $this->assertTrue((new FieldsParser())->parseFields()->areDefaultsIncluded());
+        return [
+            'names and extensions' => [
+                ['id', 'owner.name,owner.address.city', 'items'],
+                new FieldsConfig(
+                    false,
+                    ['id', 'owner', 'owner', 'items'],
+                    ['id' => ['*'], 'owner' => ['name', 'address.city'], 'items' => ['*']]
+                ),
+            ],
+            'wildcard' => [['*', 'extra'], new FieldsConfig(true, ['extra'], ['extra' => ['*']])],
+        ];
     }
 
-    public function testParseUnscopedFieldsCollectsNamesAndExtensions()
+    /**
+     * @dataProvider fieldsProvider
+     */
+    public function testParseFields(array $arguments, FieldsConfig $expected)
     {
-        $config = (new FieldsParser())->parseUnscopedFields(['id', 'owner.name,owner.address.city', 'items']);
-
-        $this->assertFalse($config->areDefaultsIncluded());
-        $this->assertTrue($config->isIncluded('id'));
-        $this->assertTrue($config->isIncluded('owner'));
-        $this->assertTrue($config->isIncluded('items'));
-        $this->assertFalse($config->isIncluded('name'));
-        $this->assertSame(['*'], $config->getFieldExtensions('id'));
-        $this->assertSame(['name', 'address.city'], $config->getFieldExtensions('owner'));
+        $this->assertEquals($expected, (new FieldsParser())->parseFields(...$arguments));
     }
 
-    public function testWildcardIncludesDefaults()
+    public static function fieldsProvider()
     {
-        $config = (new FieldsParser())->parseUnscopedFields(['*', 'extra']);
-
-        $this->assertTrue($config->areDefaultsIncluded());
-        $this->assertTrue($config->isIncluded('extra', false));
-    }
-
-    public function testSubfieldsOfAListedFieldSurviveTheWildcard()
-    {
-        $parser = new FieldsParser();
-
-        $this->assertTrue($parser->parseFields(['*', 'owner.secret'], ['owner'])->isIncluded('secret', false));
-        $this->assertTrue($parser->parseFields(['owner.secret', '*'], ['owner'])->isIncluded('secret', false));
+        return [
+            'no arguments' => [[], new FieldsConfig(true, [], [])],
+            'null fields' => [[null], new FieldsConfig(true, [], [])],
+            'null fields with a scope' => [[null, ['owner']], new FieldsConfig(true, [], [])],
+            'scope descends into field extensions' => [
+                [['owner.address.city', 'id'], ['owner', 'address']],
+                new FieldsConfig(false, ['city'], ['city' => ['*']]),
+            ],
+            'scope into a field that was not requested' => [[['id'], ['owner']], new FieldsConfig(false, [], [])],
+            'subfield listed after the wildcard' => [
+                [['*', 'owner.secret'], ['owner']],
+                new FieldsConfig(true, ['secret'], ['secret' => ['*']]),
+            ],
+            'subfield listed before the wildcard' => [
+                [['owner.secret', '*'], ['owner']],
+                new FieldsConfig(true, ['secret'], ['secret' => ['*']]),
+            ],
+        ];
     }
 
     public function testFieldEndingWithDotThrows()
@@ -57,27 +68,5 @@ class FieldsParserTest extends TestCase
         $this->expectExceptionMessage('Invalid field provided, field cannot end with a dot');
 
         (new FieldsParser())->parseUnscopedFields(['id', 'owner.']);
-    }
-
-    public function testScopeDescendsIntoFieldExtensions()
-    {
-        $config = (new FieldsParser())->parseFields(['owner.address.city', 'id'], ['owner', 'address']);
-
-        $this->assertFalse($config->areDefaultsIncluded());
-        $this->assertTrue($config->isIncluded('city'));
-        $this->assertFalse($config->isIncluded('id'));
-    }
-
-    public function testScopeIntoFieldThatWasNotRequestedIncludesNothing()
-    {
-        $config = (new FieldsParser())->parseFields(['id'], ['owner']);
-
-        $this->assertFalse($config->areDefaultsIncluded());
-        $this->assertFalse($config->isIncluded('id'));
-    }
-
-    public function testScopeKeepsDefaultsWhenFieldsAreNull()
-    {
-        $this->assertTrue((new FieldsParser())->parseFields(null, ['owner'])->areDefaultsIncluded());
     }
 }

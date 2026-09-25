@@ -46,22 +46,33 @@ class ResponseMapperFactoryTest extends TestCase
         $this->assertSame($this->factory, $this->factory->addMapper('other', new PlainNormalizer()));
     }
 
-    public function testDefaultMapperIsReturnedWithoutOptions()
+    /**
+     * @dataProvider optionsProvider
+     */
+    public function testCreateResponseMapper(array $options, $expectedMapper)
     {
-        $this->assertSame($this->defaultMapper, $this->factory->createResponseMapper([]));
+        $mappers = ['default' => $this->defaultMapper, 'short' => $this->shortMapper, 'full' => $this->fullMapper];
+
+        $this->assertSame($mappers[$expectedMapper], $this->factory->createResponseMapper($options));
     }
 
-    public function testMapperOptionSelectsMapper()
+    public static function optionsProvider()
     {
-        $this->assertSame($this->fullMapper, $this->factory->createResponseMapper(['mapper' => 'full']));
-    }
-
-    public function testMapperOptionWinsOverFlags()
-    {
-        $this->assertSame(
-            $this->shortMapper,
-            $this->factory->createResponseMapper(['mapper' => 'short', 'full' => true])
-        );
+        return [
+            'no options' => [[], 'default'],
+            'mapper option' => [['mapper' => 'full'], 'full'],
+            'mapper option wins over flags' => [['mapper' => 'short', 'full' => true], 'short'],
+            'null mapper option' => [['mapper' => null], 'default'],
+            'flag set to true' => [['short' => true], 'short'],
+            'two true flags, full listed last' => [['short' => true, 'full' => true], 'full'],
+            'two true flags, short listed last' => [['full' => true, 'short' => true], 'short'],
+            'later true flag naming no mapper' => [['short' => true, 'unknown' => true], 'short'],
+            'later flag that is false' => [['short' => true, 'full' => false], 'short'],
+            'flag set to string one' => [['short' => '1'], 'default'],
+            'flag set to integer one' => [['short' => 1], 'default'],
+            'flag set to false' => [['short' => false], 'default'],
+            'true flag naming no mapper' => [['unknown' => true], 'default'],
+        ];
     }
 
     public function testUnknownMapperOptionThrows()
@@ -70,64 +81,5 @@ class ResponseMapperFactoryTest extends TestCase
         $this->expectExceptionMessage('Wrong mapper key specified: missing');
 
         $this->factory->createResponseMapper(['mapper' => 'missing']);
-    }
-
-    public function testNullMapperOptionFallsBackToDefault()
-    {
-        $this->assertSame($this->defaultMapper, $this->factory->createResponseMapper(['mapper' => null]));
-    }
-
-    public function testFlagSetToTrueSelectsMapper()
-    {
-        $this->assertSame($this->shortMapper, $this->factory->createResponseMapper(['short' => true]));
-    }
-
-    /**
-     * Records current behaviour, which nothing documents: without a `mapper` option, when several flags that name added
-     * mappers are true, the last listed one wins, whatever order the mappers were added in.
-     */
-    public function testWhenSeveralFlagsAreTrueTheLastListedWins()
-    {
-        $this->assertSame(
-            $this->fullMapper,
-            $this->factory->createResponseMapper(['short' => true, 'full' => true])
-        );
-        $this->assertSame(
-            $this->shortMapper,
-            $this->factory->createResponseMapper(['full' => true, 'short' => true])
-        );
-    }
-
-    /**
-     * Records current behaviour: a later flag that names no mapper, or that is not `true`, leaves the earlier choice.
-     */
-    public function testLaterFlagWithoutMapperOrNotTrueLeavesTheEarlierChoice()
-    {
-        $this->assertSame(
-            $this->shortMapper,
-            $this->factory->createResponseMapper(['short' => true, 'unknown' => true])
-        );
-        $this->assertSame(
-            $this->shortMapper,
-            $this->factory->createResponseMapper(['short' => true, 'full' => false])
-        );
-    }
-
-    /**
-     * @dataProvider ignoredFlagProvider
-     */
-    public function testFlagsThatAreNotStrictlyTrueOrUnknownAreIgnored(array $options)
-    {
-        $this->assertSame($this->defaultMapper, $this->factory->createResponseMapper($options));
-    }
-
-    public static function ignoredFlagProvider()
-    {
-        return [
-            'string one' => [['short' => '1']],
-            'integer one' => [['short' => 1]],
-            'false' => [['short' => false]],
-            'unknown mapper' => [['unknown' => true]],
-        ];
     }
 }

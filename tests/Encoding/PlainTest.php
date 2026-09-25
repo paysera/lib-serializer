@@ -7,22 +7,38 @@ use PHPUnit\Framework\TestCase;
 
 class PlainTest extends TestCase
 {
-    public function testContentTypeDefaultsToTextPlain()
+    /**
+     * @dataProvider contentTypeProvider
+     */
+    public function testContentType(Plain $plain, $expected)
     {
-        $this->assertSame('text/plain', (new Plain())->getContentType());
+        $this->assertSame($expected, $plain->getContentType());
     }
 
-    public function testContentTypeIsConfigurable()
+    public static function contentTypeProvider()
     {
-        $this->assertSame('image/png', (new Plain('image/png'))->getContentType());
+        return [
+            'default' => [new Plain(), 'text/plain'],
+            'configured' => [new Plain('image/png'), 'image/png'],
+        ];
     }
 
-    public function testEncodeAndDecodeReturnInputUnchanged()
+    /**
+     * @dataProvider inputProvider
+     */
+    public function testEncodeAndDecodeReturnInputUnchanged($input)
     {
         $plain = new Plain();
 
-        $this->assertSame("raw \x00 bytes", $plain->encode("raw \x00 bytes"));
-        $this->assertSame("raw \x00 bytes", $plain->decode("raw \x00 bytes"));
-        $this->assertSame(['not', 'a', 'string'], $plain->encode(['not', 'a', 'string']));
+        $this->assertSame($input, $plain->encode($input));
+        $this->assertSame($input, $plain->decode($input));
+    }
+
+    public static function inputProvider()
+    {
+        return [
+            'binary string' => ["raw \x00 bytes"],
+            'array' => [['not', 'a', 'string']],
+        ];
     }
 }

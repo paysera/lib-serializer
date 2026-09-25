@@ -11,57 +11,54 @@ use PHPUnit\Framework\TestCase;
 
 class ArrayNormalizerTest extends TestCase
 {
-    public function testMapToEntityMapsEveryElementAndDropsKeys()
+    /**
+     * @dataProvider mapToEntityProvider
+     */
+    public function testMapToEntity($data, array $expected)
     {
         $inner = $this->createMock(DenormalizerInterface::class);
-        $inner->method('mapToEntity')->willReturnCallback(function ($element) {
-            return strtoupper($element);
-        });
+        $inner->expects($this->exactly(count($expected)))
+            ->method('mapToEntity')
+            ->willReturnCallback(function ($element) {
+                return strtoupper($element);
+            });
 
-        $this->assertSame(['A', 'B'], (new ArrayNormalizer($inner))->mapToEntity(['x' => 'a', 'y' => 'b']));
+        $this->assertSame($expected, (new ArrayNormalizer($inner))->mapToEntity($data));
     }
 
-    public function testMapToEntityReturnsEmptyArrayForNull()
+    public static function mapToEntityProvider()
     {
-        $inner = $this->createMock(DenormalizerInterface::class);
-        $inner->expects($this->never())->method('mapToEntity');
-
-        $this->assertSame([], (new ArrayNormalizer($inner))->mapToEntity(null));
+        return [
+            'every element, keys dropped' => [['x' => 'a', 'y' => 'b'], ['A', 'B']],
+            'null' => [null, []],
+        ];
     }
 
-    public function testMapFromEntityPassesSameContextToEveryElement()
+    /**
+     * @dataProvider mapFromEntityProvider
+     */
+    public function testMapFromEntity(array $arguments, array $expected)
     {
-        $context = new NormalizationContext();
         $inner = $this->createMock(ContextAwareNormalizerInterface::class);
-        $inner->expects($this->exactly(2))
+        $inner->expects($this->exactly(count($expected)))
             ->method('mapFromEntity')
-            ->with($this->anything(), $this->identicalTo($context))
+            ->with($this->anything(), $this->identicalTo($arguments[1] ?? null))
             ->willReturnCallback(function ($element) {
                 return $element * 10;
             });
 
-        $this->assertSame(
-            [10, 20],
-            (new ArrayNormalizer($inner))->mapFromEntity(new ArrayIterator(['x' => 1, 'y' => 2]), $context)
-        );
+        $this->assertSame($expected, (new ArrayNormalizer($inner))->mapFromEntity(...$arguments));
     }
 
-    public function testMapFromEntityPassesNullContextWhenNoneGiven()
+    public static function mapFromEntityProvider()
     {
-        $inner = $this->createMock(ContextAwareNormalizerInterface::class);
-        $inner->expects($this->once())
-            ->method('mapFromEntity')
-            ->with(1, null)
-            ->willReturn('one');
-
-        $this->assertSame(['one'], (new ArrayNormalizer($inner))->mapFromEntity([1]));
-    }
-
-    public function testMapFromEntityReturnsEmptyArrayForNull()
-    {
-        $inner = $this->createMock(ContextAwareNormalizerInterface::class);
-        $inner->expects($this->never())->method('mapFromEntity');
-
-        $this->assertSame([], (new ArrayNormalizer($inner))->mapFromEntity(null));
+        return [
+            'same context for every element, keys dropped' => [
+                [new ArrayIterator(['x' => 1, 'y' => 2]), new NormalizationContext()],
+                [10, 20],
+            ],
+            'no context given' => [[[1]], [10]],
+            'null' => [[null], []],
+        ];
     }
 }

@@ -7,36 +7,45 @@ use PHPUnit\Framework\TestCase;
 
 class FieldsConfigTest extends TestCase
 {
-    public function testDefaultFieldsAreIncludedWhenDefaultsAreIncluded()
+    /**
+     * @dataProvider isIncludedProvider
+     */
+    public function testIsIncluded(FieldsConfig $config, array $arguments, $expected)
     {
-        $config = new FieldsConfig(true, [], []);
-
-        $this->assertTrue($config->areDefaultsIncluded());
-        $this->assertTrue($config->isIncluded('anything'));
+        $this->assertSame($expected, $config->isIncluded(...$arguments));
     }
 
-    public function testNonDefaultFieldIsIncludedOnlyWhenListed()
+    public static function isIncludedProvider()
     {
-        $config = new FieldsConfig(true, ['extra'], []);
+        $withDefaults = new FieldsConfig(true, ['extra'], []);
+        $withoutDefaults = new FieldsConfig(false, ['id', '0'], []);
 
-        $this->assertTrue($config->isIncluded('extra', false));
-        $this->assertFalse($config->isIncluded('other', false));
+        return [
+            'default field with defaults included' => [new FieldsConfig(true, [], []), ['anything'], true],
+            'listed non-default field' => [$withDefaults, ['extra', false], true],
+            'unlisted non-default field' => [$withDefaults, ['other', false], false],
+            'listed field without defaults' => [$withoutDefaults, ['id'], true],
+            'integer name of a listed field' => [$withoutDefaults, [0], true],
+            'unlisted field without defaults' => [$withoutDefaults, ['name'], false],
+        ];
     }
 
-    public function testOnlyListedFieldsAreIncludedWithoutDefaults()
+    /**
+     * @dataProvider defaultsIncludedProvider
+     */
+    public function testAreDefaultsIncluded($defaultsIncluded, $expected)
     {
-        $config = new FieldsConfig(false, ['id', '0'], []);
-
-        $this->assertFalse($config->areDefaultsIncluded());
-        $this->assertTrue($config->isIncluded('id'));
-        $this->assertTrue($config->isIncluded(0));
-        $this->assertFalse($config->isIncluded('name'));
+        $this->assertSame($expected, (new FieldsConfig($defaultsIncluded, [], []))->areDefaultsIncluded());
     }
 
-    public function testDefaultsIncludedFlagIsCastToBoolean()
+    public static function defaultsIncludedProvider()
     {
-        $this->assertTrue((new FieldsConfig(1, [], []))->areDefaultsIncluded());
-        $this->assertFalse((new FieldsConfig(null, [], []))->areDefaultsIncluded());
+        return [
+            'true' => [true, true],
+            'false' => [false, false],
+            'integer one' => [1, true],
+            'null' => [null, false],
+        ];
     }
 
     /**

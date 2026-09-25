@@ -13,6 +13,7 @@ use Paysera\Component\Serializer\Tests\Fixtures\Validation\GroupedAccount;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\PropertyNamedConstraint;
 use Paysera\Component\Serializer\Tests\Fixtures\Validation\UnnamedConstraint;
 use Paysera\Component\Serializer\Validation\PropertiesAwareValidator;
+use Paysera\Component\Serializer\Validation\PropertyPathConverterInterface;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use stdClass;
@@ -21,66 +22,50 @@ use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validation;
 
-/**
- * Runs against Symfony's real validator on every Symfony line the library allows, because this class is where the
- * library meets symfony/validator.
- */
 class PropertiesAwareValidatorTest extends TestCase
 {
-    public function testValidEntityPassesWithoutException()
+    /**
+     * @dataProvider validEntityProvider
+     */
+    public function testValidEntityPassesWithoutException($entity)
     {
         $validator = new PropertiesAwareValidator($this->createSymfonyValidator(), new CamelCaseToSnakeCaseConverter());
 
         $this->expectNotToPerformAssertions();
 
-        $validator->validate(new Account('LT12 1000 0111 0100 1000', '', new Beneficiary('Jane Doe')));
+        $validator->validate($entity);
     }
 
-    public function testViolationsAreReportedByConvertedPropertyPath()
+    public static function validEntityProvider()
     {
-        $validator = new PropertiesAwareValidator($this->createSymfonyValidator(), new CamelCaseToSnakeCaseConverter());
+        return [
+            'valid entity' => [new Account('LT12 1000 0111 0100 1000', '', new Beneficiary('Jane Doe'))],
+            'constraint outside the default group' => [new GroupedAccount('')],
+        ];
+    }
 
-        $exception = $this->validateAndCatch($validator, new Account('', 'jd', new Beneficiary('')));
+    /**
+     * @dataProvider invalidEntityProvider
+     */
+    public function testViolationsAreReported(
+        ?PropertyPathConverterInterface $converter,
+        $entity,
+        $groups,
+        array $expectedProperties,
+        array $expectedViolations
+    ) {
+        $validator = new PropertiesAwareValidator($this->createSymfonyValidator(), $converter);
+
+        $exception = $this->validateAndCatch($validator, $entity, $groups);
 
         $properties = $exception->getProperties();
         ksort($properties);
-        $this->assertSame(
-            [
-                'account_number' => ['This value should not be blank.'],
-                'beneficiary.full_name' => ['This value should not be blank.'],
-                'nickname' => ['This value should be blank.'],
-            ],
-            $properties
-        );
-        $this->assertSame(
-            [
-                ['account_number', 'This value should not be blank.', 'is_blank'],
-                ['beneficiary.full_name', 'This value should not be blank.', 'is_blank'],
-                ['nickname', 'This value should be blank.', 'not_blank'],
-            ],
-            $this->describeViolations($exception->getViolations())
-        );
+        $this->assertSame($expectedProperties, $properties);
+        $this->assertSame($expectedViolations, $this->describeViolations($exception->getViolations()));
     }
 
-    public function testPropertyPathsAreKeptAsTheyAreWithoutConverter()
+    public static function invalidEntityProvider()
     {
-        $validator = new PropertiesAwareValidator($this->createSymfonyValidator());
-
-        $exception = $this->validateAndCatch($validator, new Account('', '', new Beneficiary('')));
-
-        $properties = $exception->getProperties();
-        ksort($properties);
-        $this->assertSame(['accountNumber', 'beneficiary.fullName'], array_keys($properties));
-    }
-
-    public function testCustomConstraintCodesAreReportedByTheirErrorNames()
-    {
-        $validator = new PropertiesAwareValidator($this->createSymfonyValidator(), new CamelCaseToSnakeCaseConverter());
-
-        $exception = $this->validateAndCatch($validator, new CodedValues());
-
-        // Symfony reads the `$errorNames` property up to 6.4 and the `ERROR_NAMES` constant since 6.1, so a constraint
-        // that names its errors only one way reports its raw code on the lines that do not read that way.
         $symfony = new ReflectionClass(Constraint::class);
         $propertyNamedCode = $symfony->hasProperty('errorNames')
             ? 'failure'
@@ -88,26 +73,58 @@ class PropertiesAwareValidatorTest extends TestCase
         $constantNamedCode = $symfony->hasConstant('ERROR_NAMES')
             ? 'failure'
             : ConstantNamedConstraint::FAILURE_ERROR;
-        $this->assertSame(
-            [
-                ['constant_named', 'Constant named failure.', $constantNamedCode],
-                ['dual_named', 'Dual named failure.', 'failure'],
-                ['property_named', 'Property named failure.', $propertyNamedCode],
-                ['uncoded', 'Unnamed failure.', null],
-                ['unnamed', 'Unnamed failure.', UnnamedConstraint::FAILURE_ERROR],
+        $notBlank = 'This value should not be blank.';
+
+        return [
+            'property paths converted' => [
+                new CamelCaseToSnakeCaseConverter(),
+                new Account('', 'jd', new Beneficiary('')),
+                null,
+                [
+                    'account_number' => [$notBlank],
+                    'beneficiary.full_name' => [$notBlank],
+                    'nickname' => ['This value should be blank.'],
+                ],
+                [
+                    ['account_number', $notBlank, 'is_blank'],
+                    ['beneficiary.full_name', $notBlank, 'is_blank'],
+                    ['nickname', 'This value should be blank.', 'not_blank'],
+                ],
             ],
-            $this->describeViolations($exception->getViolations())
-        );
-    }
-
-    public function testOnlyTheGivenGroupsAreValidated()
-    {
-        $validator = new PropertiesAwareValidator($this->createSymfonyValidator(), new CamelCaseToSnakeCaseConverter());
-
-        $validator->validate(new GroupedAccount(''));
-
-        $exception = $this->validateAndCatch($validator, new GroupedAccount(''), ['Strict']);
-        $this->assertSame(['account_number' => ['This value should not be blank.']], $exception->getProperties());
+            'property paths kept as they are without a converter' => [
+                null,
+                new Account('', '', new Beneficiary('')),
+                null,
+                ['accountNumber' => [$notBlank], 'beneficiary.fullName' => [$notBlank]],
+                [['accountNumber', $notBlank, 'is_blank'], ['beneficiary.fullName', $notBlank, 'is_blank']],
+            ],
+            'only the given groups' => [
+                new CamelCaseToSnakeCaseConverter(),
+                new GroupedAccount(''),
+                ['Strict'],
+                ['account_number' => [$notBlank]],
+                [['account_number', $notBlank, 'is_blank']],
+            ],
+            'custom constraint codes reported by their error names' => [
+                new CamelCaseToSnakeCaseConverter(),
+                new CodedValues(),
+                null,
+                [
+                    'constant_named' => ['Constant named failure.'],
+                    'dual_named' => ['Dual named failure.'],
+                    'property_named' => ['Property named failure.'],
+                    'uncoded' => ['Unnamed failure.'],
+                    'unnamed' => ['Unnamed failure.'],
+                ],
+                [
+                    ['constant_named', 'Constant named failure.', $constantNamedCode],
+                    ['dual_named', 'Dual named failure.', 'failure'],
+                    ['property_named', 'Property named failure.', $propertyNamedCode],
+                    ['uncoded', 'Unnamed failure.', null],
+                    ['unnamed', 'Unnamed failure.', UnnamedConstraint::FAILURE_ERROR],
+                ],
+            ],
+        ];
     }
 
     public function testValidatorWithoutTheCurrentInterfaceGetsEntityAndGroups()
@@ -167,7 +184,7 @@ class PropertiesAwareValidatorTest extends TestCase
     /**
      * @param Violation[] $violations
      *
-     * @return array[] one [field, message, code] per violation, sorted, so a duplicate violation stays visible
+     * @return array[]
      */
     private function describeViolations(array $violations)
     {

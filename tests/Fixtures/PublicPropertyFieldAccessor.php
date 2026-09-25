@@ -4,10 +4,6 @@ namespace Paysera\Component\Serializer\Tests\Fixtures;
 
 use Paysera\Component\Serializer\Accessor\FieldAccessorInterface;
 
-/**
- * Reads and writes one public property, so the distributed-field tests do not
- * depend on how Symfony's PropertyAccess component behaves on each version.
- */
 class PublicPropertyFieldAccessor implements FieldAccessorInterface
 {
     /**

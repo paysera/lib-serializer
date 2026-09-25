@@ -8,17 +8,23 @@ use stdClass;
 
 class PlainNormalizerTest extends TestCase
 {
-    public function testMapFromEntityReturnsEntityUnchanged()
+    /**
+     * @dataProvider valueProvider
+     */
+    public function testReturnsValueUnchanged($value)
     {
-        $entity = new stdClass();
+        $normalizer = new PlainNormalizer();
 
-        $this->assertSame($entity, (new PlainNormalizer())->mapFromEntity($entity));
-        $this->assertSame(['a' => 1], (new PlainNormalizer())->mapFromEntity(['a' => 1]));
+        $this->assertSame($value, $normalizer->mapFromEntity($value));
+        $this->assertSame($value, $normalizer->mapToEntity($value));
     }
 
-    public function testMapToEntityReturnsDataUnchanged()
+    public static function valueProvider()
     {
-        $this->assertSame(['a' => 1], (new PlainNormalizer())->mapToEntity(['a' => 1]));
-        $this->assertNull((new PlainNormalizer())->mapToEntity(null));
+        return [
+            'object' => [new stdClass()],
+            'array' => [['a' => 1]],
+            'null' => [null],
+        ];
     }
 }

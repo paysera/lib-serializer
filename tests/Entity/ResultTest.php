@@ -114,66 +114,78 @@ class ResultTest extends TestCase
     }
 
     /**
-     * @dataProvider calculatedTotalCountProvider
+     * @dataProvider totalCountProvider
      */
-    public function testCalculateTotalCountWhenAllResultsAreFetched(Filter $filter, $resultCount, $expected)
+    public function testCalculateTotalCount(Filter $filter, $resultCount, $expectedReturn, $expectedTotal)
     {
-        $result = new Result($filter);
+        $result = (new Result($filter))->setTotalCount(99);
 
-        $this->assertSame($expected, $result->calculateTotalCount($resultCount));
-        $this->assertSame($expected, $result->getTotalCount());
+        $this->assertSame($expectedReturn, $result->calculateTotalCount($resultCount));
+        $this->assertSame($expectedTotal, $result->getTotalCount());
     }
 
-    public static function calculatedTotalCountProvider()
+    public static function totalCountProvider()
     {
         return [
-            'no limit' => [(new Filter())->setOffset(10), 5, 15],
-            'fewer results than limit' => [(new Filter())->setOffset(10)->setLimit(20), 5, 15],
-            'no results on first page' => [(new Filter())->setLimit(20), 0, 0],
+            'no limit' => [(new Filter())->setOffset(10), 5, 15, 15],
+            'fewer results than limit' => [(new Filter())->setOffset(10)->setLimit(20), 5, 15, 15],
+            'no results on first page' => [(new Filter())->setLimit(20), 0, 0, 0],
+            'page is full' => [(new Filter())->setLimit(20), 20, null, 99],
+            'cursor is used' => [(new Filter())->setAfter('cursor'), 5, null, 99],
+            'no results past first page' => [(new Filter())->setOffset(40)->setLimit(20), 0, null, 99],
         ];
     }
 
     /**
-     * @dataProvider undeterminedTotalCountProvider
+     * @dataProvider resultProvider
      */
-    public function testCalculateTotalCountReturnsNullWhenTotalIsUnknown(Filter $filter, $resultCount)
+    public function testGetters(Result $result, array $expected)
     {
-        $result = (new Result($filter))->setTotalCount(99);
-
-        $this->assertNull($result->calculateTotalCount($resultCount));
-        $this->assertSame(99, $result->getTotalCount());
+        $this->assertSame(
+            $expected,
+            [
+                'filter' => $result->getFilter(),
+                'totalCount' => $result->getTotalCount(),
+                'hasNext' => $result->hasNext(),
+                'hasPrevious' => $result->hasPrevious(),
+                'after' => $result->getAfter(),
+                'before' => $result->getBefore(),
+            ]
+        );
     }
 
-    public static function undeterminedTotalCountProvider()
-    {
-        return [
-            'page is full' => [(new Filter())->setLimit(20), 20],
-            'cursor is used' => [(new Filter())->setAfter('cursor'), 5],
-            'no results past first page' => [(new Filter())->setOffset(40)->setLimit(20), 0],
-        ];
-    }
-
-    public function testCursorsAndFlags()
+    public static function resultProvider()
     {
         $filter = new Filter();
-        $result = new Result($filter);
 
-        $this->assertSame($filter, $result->getFilter());
-        $this->assertNull($result->hasNext());
-        $this->assertNull($result->hasPrevious());
-        $this->assertNull($result->getAfter());
-        $this->assertNull($result->getBefore());
-
-        $result->setHasNext(true)->setHasPrevious(false)->setAfter('a')->setBefore('b');
-
-        $this->assertTrue($result->hasNext());
-        $this->assertFalse($result->hasPrevious());
-        $this->assertSame('a', $result->getAfter());
-        $this->assertSame('b', $result->getBefore());
-    }
-
-    public function testSetTotalCountCastsToInteger()
-    {
-        $this->assertSame(12, (new Result())->setTotalCount('12')->getTotalCount());
+        return [
+            'not set' => [
+                new Result($filter),
+                [
+                    'filter' => $filter,
+                    'totalCount' => 0,
+                    'hasNext' => null,
+                    'hasPrevious' => null,
+                    'after' => null,
+                    'before' => null,
+                ],
+            ],
+            'all set, total count given as a string' => [
+                (new Result($filter))
+                    ->setTotalCount('12')
+                    ->setHasNext(true)
+                    ->setHasPrevious(false)
+                    ->setAfter('a')
+                    ->setBefore('b'),
+                [
+                    'filter' => $filter,
+                    'totalCount' => 12,
+                    'hasNext' => true,
+                    'hasPrevious' => false,
+                    'after' => 'a',
+                    'before' => 'b',
+                ],
+            ],
+        ];
     }
 }

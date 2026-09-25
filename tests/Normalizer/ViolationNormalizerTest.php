@@ -8,50 +8,48 @@ use PHPUnit\Framework\TestCase;
 
 class ViolationNormalizerTest extends TestCase
 {
-    public function testMapToEntity()
+    /**
+     * @dataProvider mapToEntityProvider
+     */
+    public function testMapToEntity(array $data, Violation $expected)
     {
-        $violation = (new ViolationNormalizer())->mapToEntity([
-            'code' => 'not_blank',
-            'message' => 'This value should not be blank.',
-            'field' => 'email',
-        ]);
-
-        $this->assertSame('not_blank', $violation->getCode());
-        $this->assertSame('This value should not be blank.', $violation->getMessage());
-        $this->assertSame('email', $violation->getField());
+        $this->assertEquals($expected, (new ViolationNormalizer())->mapToEntity($data));
     }
 
-    public function testMapToEntityIgnoresMissingNullAndUnknownKeys()
+    public static function mapToEntityProvider()
     {
-        $violation = (new ViolationNormalizer())->mapToEntity(['code' => null, 'unknown' => 'value']);
-
-        $this->assertEquals(new Violation(), $violation);
-    }
-
-    public function testMapFromEntity()
-    {
-        $violation = (new Violation())
-            ->setField('email')
-            ->setMessage('This value should not be blank.')
-            ->setCode('not_blank')
-        ;
-
-        $this->assertSame(
-            [
-                'code' => 'not_blank',
-                'message' => 'This value should not be blank.',
-                'field' => 'email',
+        return [
+            'all keys' => [
+                ['code' => 'not_blank', 'message' => 'This value should not be blank.', 'field' => 'email'],
+                (new Violation())
+                    ->setCode('not_blank')
+                    ->setMessage('This value should not be blank.')
+                    ->setField('email'),
             ],
-            (new ViolationNormalizer())->mapFromEntity($violation)
-        );
+            'missing, null and unknown keys' => [['code' => null, 'unknown' => 'value'], new Violation()],
+        ];
     }
 
-    public function testMapFromEntityOmitsNullFields()
+    /**
+     * @dataProvider mapFromEntityProvider
+     */
+    public function testMapFromEntity(Violation $violation, array $expected)
     {
-        $this->assertSame([], (new ViolationNormalizer())->mapFromEntity(new Violation()));
-        $this->assertSame(
-            ['message' => 'Invalid'],
-            (new ViolationNormalizer())->mapFromEntity((new Violation())->setMessage('Invalid'))
-        );
+        $this->assertSame($expected, (new ViolationNormalizer())->mapFromEntity($violation));
+    }
+
+    public static function mapFromEntityProvider()
+    {
+        return [
+            'all fields' => [
+                (new Violation())
+                    ->setField('email')
+                    ->setMessage('This value should not be blank.')
+                    ->setCode('not_blank'),
+                ['code' => 'not_blank', 'message' => 'This value should not be blank.', 'field' => 'email'],
+            ],
+            'no fields' => [new Violation(), []],
+            'message only' => [(new Violation())->setMessage('Invalid'), ['message' => 'Invalid']],
+        ];
     }
 }

@@ -9,53 +9,50 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyPath;
 
-/**
- * Runs against Symfony's real property accessor on every Symfony line the library allows, because this class is where
- * the library meets symfony/property-access.
- */
 class PropertyPathFieldAccessorTest extends TestCase
 {
-    public function testGetValueReadsANestedProperty()
+    /**
+     * @dataProvider getValueProvider
+     */
+    public function testGetValue($propertyPath, $entity, $expected)
     {
-        $accessor = new PropertyPathFieldAccessor(PropertyAccess::createPropertyAccessor(), 'beneficiary.fullName');
+        $accessor = new PropertyPathFieldAccessor(PropertyAccess::createPropertyAccessor(), $propertyPath);
 
-        $this->assertSame('Jane Doe', $accessor->getValue(new Payment(new Payee('Jane Doe'))));
+        $this->assertSame($expected, $accessor->getValue($entity));
     }
 
-    public function testSetValueWritesANestedProperty()
+    public static function getValueProvider()
     {
-        $accessor = new PropertyPathFieldAccessor(PropertyAccess::createPropertyAccessor(), 'beneficiary.fullName');
+        return [
+            'nested property' => ['beneficiary.fullName', new Payment(new Payee('Jane Doe')), 'Jane Doe'],
+            'property path object' => [
+                new PropertyPath('beneficiary.fullName'),
+                new Payment(new Payee('Jane Doe')),
+                'Jane Doe',
+            ],
+            'array indexes' => ['[account][number]', ['account' => ['number' => 'LT12 1000']], 'LT12 1000'],
+            'missing array index' => ['[account][number]', ['account' => []], null],
+        ];
+    }
+
+    /**
+     * @dataProvider setValueProvider
+     */
+    public function testSetValueWritesANestedProperty($propertyPath)
+    {
+        $accessor = new PropertyPathFieldAccessor(PropertyAccess::createPropertyAccessor(), $propertyPath);
         $payment = new Payment(new Payee('Jane Doe'));
 
         $accessor->setValue($payment, 'John Doe');
 
-        $this->assertSame('John Doe', $payment->getBeneficiary()->getFullName());
+        $this->assertEquals(new Payment(new Payee('John Doe')), $payment);
     }
 
-    public function testGetValueReadsArrayIndexes()
+    public static function setValueProvider()
     {
-        $accessor = new PropertyPathFieldAccessor(PropertyAccess::createPropertyAccessor(), '[account][number]');
-
-        $this->assertSame('LT12 1000', $accessor->getValue(['account' => ['number' => 'LT12 1000']]));
-    }
-
-    public function testGetValueOfAMissingArrayIndexIsNull()
-    {
-        $accessor = new PropertyPathFieldAccessor(PropertyAccess::createPropertyAccessor(), '[account][number]');
-
-        $this->assertNull($accessor->getValue(['account' => []]));
-    }
-
-    public function testAcceptsAPropertyPathObject()
-    {
-        $accessor = new PropertyPathFieldAccessor(
-            PropertyAccess::createPropertyAccessor(),
-            new PropertyPath('beneficiary.fullName')
-        );
-        $payment = new Payment(new Payee('Jane Doe'));
-
-        $accessor->setValue($payment, 'John Doe');
-
-        $this->assertSame('John Doe', $accessor->getValue($payment));
+        return [
+            'string path' => ['beneficiary.fullName'],
+            'property path object' => [new PropertyPath('beneficiary.fullName')],
+        ];
     }
 }

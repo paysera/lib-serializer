@@ -13,10 +13,7 @@ class EncoderFactoryTest extends TestCase
      */
     public function testCreatesPlainEncoderWithContentType($method, $contentType)
     {
-        $encoder = (new EncoderFactory())->$method();
-
-        $this->assertInstanceOf(Plain::class, $encoder);
-        $this->assertSame($contentType, $encoder->getContentType());
+        $this->assertEquals(new Plain($contentType), (new EncoderFactory())->$method());
     }
 
     public static function encoderProvider()

@@ -51,11 +51,14 @@ class DistributedNormalizerTest extends TestCase
         ];
     }
 
-    public function testMapToEntityHandsFieldKeysToFieldDenormalizers()
+    /**
+     * @dataProvider mapToEntityProvider
+     */
+    public function testMapToEntity($data, $expectedInnerData, stdClass $expectedEntity)
     {
         $entity = new stdClass();
         $inner = $this->createMock(DenormalizerInterface::class);
-        $inner->expects($this->once())->method('mapToEntity')->with(['name' => 'John'])->willReturn($entity);
+        $inner->expects($this->once())->method('mapToEntity')->with($expectedInnerData)->willReturn($entity);
 
         $normalizer = $this->createDistributedNormalizer($inner);
         $normalizer->addField('tags', new PublicPropertyFieldAccessor('tags'), new PlainNormalizer());
@@ -64,56 +67,36 @@ class DistributedNormalizerTest extends TestCase
             new PublicPropertyFieldAccessor('code'),
             new PlainItemNormalizer('value')
         );
-
-        $this->assertSame(
-            $entity,
-            $normalizer->mapToEntity(['name' => 'John', 'tags' => ['a', 'b'], 'code' => ['value' => 'X1']])
-        );
-        $this->assertSame(['a', 'b'], $entity->tags);
-        $this->assertSame('X1', $entity->code);
-    }
-
-    public function testMapToEntityRemovesNullFieldValueWithoutSettingIt()
-    {
-        $entity = new stdClass();
-        $inner = $this->createMock(DenormalizerInterface::class);
-        $inner->expects($this->once())->method('mapToEntity')->with(['name' => 'John'])->willReturn($entity);
-
-        $normalizer = $this->createDistributedNormalizer($inner);
-        $normalizer->addField('tags', new PublicPropertyFieldAccessor('tags'), new PlainNormalizer());
-
-        $normalizer->mapToEntity(['name' => 'John', 'tags' => null]);
-
-        $this->assertSame([], get_object_vars($entity));
-    }
-
-    public function testMapToEntityLeavesKeyOfFieldWithoutDenormalizerInData()
-    {
-        $inner = $this->createMock(DenormalizerInterface::class);
-        $inner->expects($this->once())
-            ->method('mapToEntity')
-            ->with(['name' => 'John', 'summary' => 'text'])
-            ->willReturn('entity');
-
-        $normalizer = $this->createDistributedNormalizer($inner);
         $normalizer->addField(
             'summary',
             new PublicPropertyFieldAccessor('summary'),
             $this->createMock(ContextAwareNormalizerInterface::class)
         );
 
-        $this->assertSame('entity', $normalizer->mapToEntity(['name' => 'John', 'summary' => 'text']));
+        $this->assertSame($entity, $normalizer->mapToEntity($data));
+        $this->assertEquals($expectedEntity, $entity);
     }
 
-    public function testMapToEntityPassesDataThatIsNotArrayToInnerDenormalizer()
+    public static function mapToEntityProvider()
     {
-        $inner = $this->createMock(DenormalizerInterface::class);
-        $inner->expects($this->once())->method('mapToEntity')->with('raw')->willReturn('entity');
-
-        $normalizer = $this->createDistributedNormalizer($inner);
-        $normalizer->addField('tags', new PublicPropertyFieldAccessor('tags'), new PlainNormalizer());
-
-        $this->assertSame('entity', $normalizer->mapToEntity('raw'));
+        return [
+            'field keys set through their denormalizers' => [
+                ['name' => 'John', 'tags' => ['a', 'b'], 'code' => ['value' => 'X1']],
+                ['name' => 'John'],
+                (object)['tags' => ['a', 'b'], 'code' => 'X1'],
+            ],
+            'null field value removed without being set' => [
+                ['name' => 'John', 'tags' => null],
+                ['name' => 'John'],
+                new stdClass(),
+            ],
+            'key of a field without a denormalizer left in the data' => [
+                ['name' => 'John', 'summary' => 'text'],
+                ['name' => 'John', 'summary' => 'text'],
+                new stdClass(),
+            ],
+            'data that is not an array' => ['raw', 'raw', new stdClass()],
+        ];
     }
 
     public function testMapFromEntityWithoutContextAddsDefaultFieldsOnly()
@@ -134,10 +117,6 @@ class DistributedNormalizerTest extends TestCase
         $this->assertSame(['name' => 'John', 'tags' => ['a']], $normalizer->mapFromEntity($entity));
     }
 
-    /**
-     * Requested fields filter the inner normalizer's output, include additional fields, drop
-     * unrequested ones, and reach nested fields through a context scoped to the field name.
-     */
     public function testMapFromEntityWithContextFiltersFieldsAndScopesNestedFields()
     {
         $entity = new stdClass();

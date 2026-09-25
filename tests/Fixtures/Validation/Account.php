@@ -7,11 +7,6 @@ use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Valid;
 use Symfony\Component\Validator\Mapping\ClassMetadata;
 
-/**
- * An entity validated through Symfony's metadata, the way applications validate request entities: built-in constraints
- * on camelCase properties and a nested object under Valid.
- * (Constraints are built without options so the same fixture runs on every Symfony line the library allows.)
- */
 class Account
 {
     private $accountNumber;

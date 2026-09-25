@@ -7,33 +7,47 @@ use PHPUnit\Framework\TestCase;
 
 class NormalizationContextTest extends TestCase
 {
-    public function testFieldsAndScopeDefaultToEmpty()
+    /**
+     * @dataProvider contextProvider
+     */
+    public function testFieldsAndScope(NormalizationContext $context, array $expected)
     {
-        $context = new NormalizationContext();
+        $this->assertSame($expected, ['fields' => $context->getFields(), 'scope' => $context->getScope()]);
+    }
 
-        $this->assertSame([], $context->getFields());
-        $this->assertSame([], $context->getScope());
+    public static function contextProvider()
+    {
+        return [
+            'new' => [new NormalizationContext(), ['fields' => [], 'scope' => []]],
+            'fields set' => [
+                (new NormalizationContext())->setFields(['id', 'items.name']),
+                ['fields' => ['id', 'items.name'], 'scope' => []],
+            ],
+            'scoped' => [
+                (new NormalizationContext())->setFields(['items.name'])->createScopedContext('items'),
+                ['fields' => ['items.name'], 'scope' => ['items']],
+            ],
+            'scoped twice' => [
+                (new NormalizationContext())->setFields(['items.name'])
+                    ->createScopedContext('items')
+                    ->createScopedContext('owner'),
+                ['fields' => ['items.name'], 'scope' => ['items', 'owner']],
+            ],
+        ];
     }
 
     public function testSetFieldsIsFluent()
     {
         $context = new NormalizationContext();
 
-        $this->assertSame($context, $context->setFields(['id', 'items.name']));
-        $this->assertSame(['id', 'items.name'], $context->getFields());
+        $this->assertSame($context, $context->setFields(['id']));
     }
 
-    public function testCreateScopedContextReturnsCopyWithFieldAppendedToScope()
+    public function testCreateScopedContextReturnsCopyAndLeavesOriginalUnchanged()
     {
         $context = (new NormalizationContext())->setFields(['items.name']);
 
-        $scoped = $context->createScopedContext('items');
-        $nested = $scoped->createScopedContext('owner');
-
-        $this->assertNotSame($context, $scoped);
-        $this->assertSame(['items.name'], $scoped->getFields());
-        $this->assertSame(['items'], $scoped->getScope());
-        $this->assertSame(['items', 'owner'], $nested->getScope());
-        $this->assertSame([], $context->getScope());
+        $this->assertNotSame($context, $context->createScopedContext('items'));
+        $this->assertEquals((new NormalizationContext())->setFields(['items.name']), $context);
     }
 }

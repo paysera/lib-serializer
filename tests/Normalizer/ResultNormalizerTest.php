@@ -85,55 +85,52 @@ class ResultNormalizerTest extends TestCase
 
     public function testMapToEntityMapsItemsWithItemNormalizer()
     {
-        $result = (new ResultNormalizer('payments', new PlainItemNormalizer('id')))->mapToEntity([
-            'payments' => [['id' => 1], ['id' => 2]],
-        ]);
-
-        $this->assertSame([1, 2], $result->getItems());
-        $this->assertEquals(new Filter(), $result->getFilter());
-    }
-
-    public function testMapFromEntityRendersItemsAndMetadata()
-    {
-        $result = (new Result((new Filter())->setLimit(2)))
-            ->setTotalCount(5)
-            ->setItems([['id' => 1], ['id' => 2]])
-        ;
-        $normalizer = new ResultNormalizer('payments', new PlainNormalizer());
-
-        $this->assertSame($normalizer, $normalizer->setMetadataNormalizer(new ResultMetadataNormalizer()));
-        $this->assertSame(
-            [
+        $this->assertEquals(
+            (new Result())->setFilter(new Filter())->setItems([1, 2]),
+            (new ResultNormalizer('payments', new PlainItemNormalizer('id')))->mapToEntity([
                 'payments' => [['id' => 1], ['id' => 2]],
-                '_metadata' => ['total' => 5, 'limit' => 2, 'offset' => 0],
-            ],
-            $normalizer->mapFromEntity($result)
+            ])
         );
     }
 
     /**
-     * Items are normalized in a context scoped to the items key; metadata is not filtered.
+     * @dataProvider mapFromEntityProvider
      */
-    public function testMapFromEntityScopesContextToItemsKey()
+    public function testMapFromEntity($itemNormalizer, array $arguments, array $expected)
+    {
+        $normalizer = new ResultNormalizer('payments', $itemNormalizer);
+
+        $this->assertSame($normalizer, $normalizer->setMetadataNormalizer(new ResultMetadataNormalizer()));
+        $this->assertSame($expected, $normalizer->mapFromEntity(...$arguments));
+    }
+
+    public static function mapFromEntityProvider()
     {
         $fieldsParser = new FieldsParser();
-        $itemNormalizer = (new ContextAwareNormalizerFactory($fieldsParser, new FieldsFilter($fieldsParser)))
-            ->create(new PlainNormalizer());
-        $result = (new Result(new Filter()))
-            ->setTotalCount(2)
-            ->setItems([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']])
-        ;
-        $context = (new NormalizationContext())->setFields(['payments.id']);
 
-        $normalizer = (new ResultNormalizer('payments', $itemNormalizer))
-            ->setMetadataNormalizer(new ResultMetadataNormalizer());
-
-        $this->assertSame(
-            [
-                'payments' => [['id' => 1], ['id' => 2]],
-                '_metadata' => ['total' => 2, 'limit' => null, 'offset' => 0],
+        return [
+            'items and metadata' => [
+                new PlainNormalizer(),
+                [(new Result((new Filter())->setLimit(2)))->setTotalCount(5)->setItems([['id' => 1], ['id' => 2]])],
+                [
+                    'payments' => [['id' => 1], ['id' => 2]],
+                    '_metadata' => ['total' => 5, 'limit' => 2, 'offset' => 0],
+                ],
             ],
-            $normalizer->mapFromEntity($result, $context)
-        );
+            'items in a context scoped to the items key, metadata not filtered' => [
+                (new ContextAwareNormalizerFactory($fieldsParser, new FieldsFilter($fieldsParser)))
+                    ->create(new PlainNormalizer()),
+                [
+                    (new Result(new Filter()))
+                        ->setTotalCount(2)
+                        ->setItems([['id' => 1, 'name' => 'a'], ['id' => 2, 'name' => 'b']]),
+                    (new NormalizationContext())->setFields(['payments.id']),
+                ],
+                [
+                    'payments' => [['id' => 1], ['id' => 2]],
+                    '_metadata' => ['total' => 2, 'limit' => null, 'offset' => 0],
+                ],
+            ],
+        ];
     }
 }

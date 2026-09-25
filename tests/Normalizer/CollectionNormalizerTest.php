@@ -9,41 +9,46 @@ use PHPUnit\Framework\TestCase;
 
 class CollectionNormalizerTest extends TestCase
 {
-    public function testMapFromEntityRendersItemsAndMetadata()
+    /**
+     * @dataProvider collectionProvider
+     */
+    public function testMapFromEntity($collection, array $expected)
     {
         $inner = $this->createMock(NormalizerInterface::class);
-        $inner->method('mapFromEntity')->willReturnCallback(function ($item) {
-            return ['id' => $item];
-        });
+        $inner->expects($this->exactly(count($expected['items'])))
+            ->method('mapFromEntity')
+            ->willReturnCallback(function ($item) {
+                return ['id' => $item];
+            });
 
-        $this->assertSame(
-            [
-                'items' => [['id' => 1], ['id' => 2], ['id' => 3]],
-                '_metadata' => [
-                    'total' => 3,
-                    'offset' => 0,
-                    'limit' => null,
-                ],
-            ],
-            (new CollectionNormalizer($inner))->mapFromEntity(new ArrayIterator(['a' => 1, 'b' => 2, 'c' => 3]))
-        );
+        $this->assertSame($expected, (new CollectionNormalizer($inner))->mapFromEntity($collection));
     }
 
-    public function testMapFromEntityRendersEmptyCollection()
+    public static function collectionProvider()
     {
-        $inner = $this->createMock(NormalizerInterface::class);
-        $inner->expects($this->never())->method('mapFromEntity');
-
-        $this->assertSame(
-            [
-                'items' => [],
-                '_metadata' => [
-                    'total' => 0,
-                    'offset' => 0,
-                    'limit' => null,
+        return [
+            'items' => [
+                new ArrayIterator(['a' => 1, 'b' => 2, 'c' => 3]),
+                [
+                    'items' => [['id' => 1], ['id' => 2], ['id' => 3]],
+                    '_metadata' => [
+                        'total' => 3,
+                        'offset' => 0,
+                        'limit' => null,
+                    ],
                 ],
             ],
-            (new CollectionNormalizer($inner))->mapFromEntity([])
-        );
+            'empty' => [
+                [],
+                [
+                    'items' => [],
+                    '_metadata' => [
+                        'total' => 0,
+                        'offset' => 0,
+                        'limit' => null,
+                    ],
+                ],
+            ],
+        ];
     }
 }

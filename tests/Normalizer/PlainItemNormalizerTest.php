@@ -7,30 +7,22 @@ use PHPUnit\Framework\TestCase;
 
 class PlainItemNormalizerTest extends TestCase
 {
-    public function testMapToEntityReturnsItemUnderKey()
-    {
-        $this->assertSame(['nested'], (new PlainItemNormalizer('id', 'default'))->mapToEntity(['id' => ['nested']]));
-    }
-
     /**
-     * @dataProvider missingItemProvider
+     * @dataProvider mapToEntityProvider
      */
-    public function testMapToEntityReturnsDefaultWhenItemIsMissing($data)
+    public function testMapToEntity(PlainItemNormalizer $normalizer, $data, $expected)
     {
-        $this->assertSame('default', (new PlainItemNormalizer('id', 'default'))->mapToEntity($data));
+        $this->assertSame($expected, $normalizer->mapToEntity($data));
     }
 
-    public static function missingItemProvider()
+    public static function mapToEntityProvider()
     {
         return [
-            'key absent' => [['other' => 1]],
-            'value null' => [['id' => null]],
-            'data null' => [null],
+            'item under key' => [new PlainItemNormalizer('id', 'default'), ['id' => ['nested']], ['nested']],
+            'key absent' => [new PlainItemNormalizer('id', 'default'), ['other' => 1], 'default'],
+            'value null' => [new PlainItemNormalizer('id', 'default'), ['id' => null], 'default'],
+            'data null' => [new PlainItemNormalizer('id', 'default'), null, 'default'],
+            'no default given' => [new PlainItemNormalizer('id'), [], null],
         ];
-    }
-
-    public function testDefaultIsNull()
-    {
-        $this->assertNull((new PlainItemNormalizer('id'))->mapToEntity([]));
     }
 }

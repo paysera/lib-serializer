@@ -10,21 +10,25 @@ use PHPUnit\Framework\TestCase;
 
 class JsonpEncoderFactoryTest extends TestCase
 {
-    public function testCreateEncoderDefaultsToCallbackNamedCallbackWithoutParameter()
+    /**
+     * @dataProvider optionsProvider
+     */
+    public function testCreateEncoder(array $options, $expected)
     {
-        $encoder = (new JsonpEncoderFactory(new Json(), new JsonpCallbackValidator()))->createEncoder([]);
+        $encoder = (new JsonpEncoderFactory(new Json(), new JsonpCallbackValidator()))->createEncoder($options);
 
         $this->assertInstanceOf(Jsonp::class, $encoder);
-        $this->assertSame('/**/callback([1]);', $encoder->encode([1]));
+        $this->assertSame($expected, $encoder->encode([1]));
     }
 
-    public function testCreateEncoderUsesCallbackAndParameterOptions()
+    public static function optionsProvider()
     {
-        $encoder = (new JsonpEncoderFactory(new Json(), new JsonpCallbackValidator()))->createEncoder([
-            'callback' => 'handle',
-            'parameter' => '{"id":5}',
-        ]);
-
-        $this->assertSame('/**/handle([1], {"id":5});', $encoder->encode([1]));
+        return [
+            'callback named callback, no parameter by default' => [[], '/**/callback([1]);'],
+            'callback and parameter options' => [
+                ['callback' => 'handle', 'parameter' => '{"id":5}'],
+                '/**/handle([1], {"id":5});',
+            ],
+        ];
     }
 }

@@ -8,25 +8,29 @@ use PHPUnit\Framework\TestCase;
 
 class JsonTest extends TestCase
 {
-    public function testDecodeReturnsAssociativeArrays()
+    /**
+     * @dataProvider decodeProvider
+     */
+    public function testDecode($json, $expected)
     {
-        $this->assertSame(
-            ['a' => 1, 'b' => ['c' => true], 'd' => [1, 2]],
-            (new Json())->decode('{"a":1,"b":{"c":true},"d":[1,2]}')
-        );
+        $this->assertSame($expected, (new Json())->decode($json));
     }
 
-    public function testDecodeReturnsScalars()
+    public static function decodeProvider()
     {
-        $this->assertSame('text', (new Json())->decode('"text"'));
-        $this->assertNull((new Json())->decode('null'));
+        return [
+            'objects as associative arrays' => [
+                '{"a":1,"b":{"c":true},"d":[1,2]}',
+                ['a' => 1, 'b' => ['c' => true], 'd' => [1, 2]],
+            ],
+            'string' => ['"text"', 'text'],
+            'null' => ['null', null],
+        ];
     }
 
     public function testDecodeThrowsOnInvalidJson()
     {
         $this->expectException(EncodingException::class);
-        // Records current behaviour: the message carries the input that failed to decode. Dropping or redacting it
-        // (the input can hold personal data) is a deliberate change that updates this line.
         $this->expectExceptionMessage('Cannot decode the data. Error: ' . JSON_ERROR_SYNTAX . ', JSON: {"a":');
 
         (new Json())->decode('{"a":');

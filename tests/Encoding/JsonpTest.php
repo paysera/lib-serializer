@@ -10,47 +10,30 @@ use PHPUnit\Framework\TestCase;
 
 class JsonpTest extends TestCase
 {
-    public function testEncodeWrapsJsonInCallback()
-    {
-        $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), 'handle');
-
-        $this->assertSame('/**/handle({"a":1});', $encoder->encode(['a' => 1]));
-    }
-
-    public function testEncodeAppendsValidJsonParameter()
-    {
-        $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), 'app.handle', '{"id":5}');
-
-        $this->assertSame('/**/app.handle({"a":1}, {"id":5});', $encoder->encode(['a' => 1]));
-    }
-
-    public function testEncodeReplacesDataWithErrorWhenParameterIsNotJson()
-    {
-        $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), 'handle', 'not json');
-
-        $this->assertSame(
-            '/**/handle({"error":"invalid_parameters",'
-            . '"error_description":"Passed parameter must be valid JSON string"});',
-            $encoder->encode(['a' => 1])
-        );
-    }
-
     /**
-     * @dataProvider invalidCallbackProvider
+     * @dataProvider encodeProvider
      */
-    public function testEncodeReturnsAlertForInvalidCallback($callback)
+    public function testEncode($callback, $parameter, $expected)
     {
-        $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), $callback, '{"id":5}');
+        $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), $callback, $parameter);
 
-        $this->assertSame('alert("Invalid callback function name");', $encoder->encode(['a' => 1]));
+        $this->assertSame($expected, $encoder->encode(['a' => 1]));
     }
 
-    public static function invalidCallbackProvider()
+    public static function encodeProvider()
     {
         return [
-            'script injection' => ['alert(1)//'],
-            'reserved keyword' => ['function'],
-            'empty' => [''],
+            'callback only' => ['handle', null, '/**/handle({"a":1});'],
+            'valid JSON parameter' => ['app.handle', '{"id":5}', '/**/app.handle({"a":1}, {"id":5});'],
+            'parameter that is not JSON' => [
+                'handle',
+                'not json',
+                '/**/handle({"error":"invalid_parameters",'
+                . '"error_description":"Passed parameter must be valid JSON string"});',
+            ],
+            'script injection callback' => ['alert(1)//', '{"id":5}', 'alert("Invalid callback function name");'],
+            'reserved keyword callback' => ['function', '{"id":5}', 'alert("Invalid callback function name");'],
+            'empty callback' => ['', '{"id":5}', 'alert("Invalid callback function name");'],
         ];
     }
 

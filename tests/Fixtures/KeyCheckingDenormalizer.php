@@ -4,11 +4,6 @@ namespace Paysera\Component\Serializer\Tests\Fixtures;
 
 use Paysera\Component\Serializer\Normalizer\BaseDenormalizer;
 
-/**
- * BaseDenormalizer offers its key checks to subclasses only, and none of the
- * library's own denormalizers calls them. Widens them to public so each check
- * can be exercised on its own.
- */
 class KeyCheckingDenormalizer extends BaseDenormalizer
 {
     public function mapToEntity($data)

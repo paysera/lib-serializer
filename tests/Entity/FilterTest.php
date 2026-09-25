@@ -45,13 +45,34 @@ class FilterTest extends TestCase
         $this->assertSame(10, (new FollowUpFilter(5, 10))->getOffset());
     }
 
-    public function testUnsetOrderingIsNullWithDescendingDirection()
+    /**
+     * @dataProvider orderingProvider
+     */
+    public function testOrdering(Filter $filter, array $expected)
     {
-        $filter = new Filter();
+        $this->assertSame(
+            $expected,
+            [
+                'orderBy' => $filter->getOrderBy(),
+                'orderAsc' => $filter->isOrderAsc(),
+                'orderDirection' => $filter->getOrderDirection(),
+            ]
+        );
+    }
 
-        $this->assertNull($filter->getOrderBy());
-        $this->assertNull($filter->isOrderAsc());
-        $this->assertSame('DESC', $filter->getOrderDirection());
+    public static function orderingProvider()
+    {
+        return [
+            'not set' => [new Filter(), ['orderBy' => null, 'orderAsc' => null, 'orderDirection' => 'DESC']],
+            'ascending' => [
+                (new Filter())->setOrderBy('created_at')->setOrderAsc(true),
+                ['orderBy' => 'created_at', 'orderAsc' => true, 'orderDirection' => 'ASC'],
+            ],
+            'descending' => [
+                (new Filter())->setOrderAsc(false),
+                ['orderBy' => null, 'orderAsc' => false, 'orderDirection' => 'DESC'],
+            ],
+        ];
     }
 
     public function testOrderingSettersAreFluent()
@@ -60,24 +81,25 @@ class FilterTest extends TestCase
 
         $this->assertSame($filter, $filter->setOrderBy('created_at'));
         $this->assertSame($filter, $filter->setOrderAsc(true));
-        $this->assertSame('created_at', $filter->getOrderBy());
-        $this->assertTrue($filter->isOrderAsc());
     }
 
-    public function testOrderDirection()
+    /**
+     * @dataProvider filterClassProvider
+     */
+    public function testCreateReturnsNewInstanceOfCalledClass($class)
     {
-        $this->assertSame('ASC', (new Filter())->setOrderAsc(true)->getOrderDirection());
-        $this->assertSame('DESC', (new Filter())->setOrderAsc(false)->getOrderDirection());
+        $filter = $class::create();
+
+        $this->assertEquals(new $class(), $filter);
+        $this->assertNotSame($filter, $class::create());
+        $this->assertSame(0, $filter->getOffset());
     }
 
-    public function testCreateReturnsNewInstanceOfCalledClass()
+    public static function filterClassProvider()
     {
-        $filter = Filter::create();
-        $subclassFilter = OwnConstructorFilter::create();
-
-        $this->assertInstanceOf(Filter::class, $filter);
-        $this->assertNotSame($filter, Filter::create());
-        $this->assertInstanceOf(OwnConstructorFilter::class, $subclassFilter);
-        $this->assertSame(0, $subclassFilter->getOffset());
+        return [
+            'filter' => [Filter::class],
+            'subclass with its own constructor' => [OwnConstructorFilter::class],
+        ];
     }
 }

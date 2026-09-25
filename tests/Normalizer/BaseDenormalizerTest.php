@@ -9,96 +9,99 @@ use PHPUnit\Framework\TestCase;
 class BaseDenormalizerTest extends TestCase
 {
     /**
-     * @var KeyCheckingDenormalizer
+     * @dataProvider acceptedProvider
      */
-    private $denormalizer;
-
-    public function setUp(): void
-    {
-        $this->denormalizer = new KeyCheckingDenormalizer();
-    }
-
-    /**
-     * @dataProvider checkProvider
-     */
-    public function testChecksRejectContentThatIsNotArray($check)
-    {
-        $this->expectException(InvalidDataException::class);
-        $this->expectExceptionMessage('Content is expected to be array');
-
-        $this->denormalizer->$check('text', ['a']);
-    }
-
-    public static function checkProvider()
-    {
-        return [
-            'available keys' => ['checkAvailableKeys'],
-            'required keys' => ['checkRequiredKeys'],
-            'only one key' => ['checkOnlyOneKeyExists'],
-        ];
-    }
-
-    public function testCheckAvailableKeysAcceptsKnownKeys()
+    public function testCheckAccepts($check, array $data, array $keys)
     {
         $this->expectNotToPerformAssertions();
 
-        $this->denormalizer->checkAvailableKeys(['a' => 1], ['a', 'b']);
+        (new KeyCheckingDenormalizer())->$check($data, $keys);
     }
 
-    public function testCheckAvailableKeysListsUnknownKeys()
+    public static function acceptedProvider()
+    {
+        return [
+            'known keys' => ['checkAvailableKeys', ['a' => 1], ['a', 'b']],
+            'required keys present' => ['checkRequiredKeys', ['a' => 1, 'b' => 0, 'c' => 3], ['a', 'b']],
+            'one of the keys, null values ignored' => [
+                'checkOnlyOneKeyExists',
+                ['a' => 1, 'b' => null, 'x' => 2],
+                ['a', 'b', 'c'],
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider rejectedProvider
+     */
+    public function testCheckRejects($check, $data, array $keys, $message)
     {
         $this->expectException(InvalidDataException::class);
-        $this->expectExceptionMessage('Some keys in item are not available: c, d');
+        $this->expectExceptionMessage($message);
 
-        $this->denormalizer->checkAvailableKeys(['a' => 1, 'c' => 2, 'd' => 3], ['a', 'b']);
+        (new KeyCheckingDenormalizer())->$check($data, $keys);
+    }
+
+    public static function rejectedProvider()
+    {
+        return [
+            'available keys of content that is not an array' => [
+                'checkAvailableKeys',
+                'text',
+                ['a'],
+                'Content is expected to be array',
+            ],
+            'required keys of content that is not an array' => [
+                'checkRequiredKeys',
+                'text',
+                ['a'],
+                'Content is expected to be array',
+            ],
+            'only one key of content that is not an array' => [
+                'checkOnlyOneKeyExists',
+                'text',
+                ['a'],
+                'Content is expected to be array',
+            ],
+            'unknown keys' => [
+                'checkAvailableKeys',
+                ['a' => 1, 'c' => 2, 'd' => 3],
+                ['a', 'b'],
+                'Some keys in item are not available: c, d',
+            ],
+            'required key set to null' => [
+                'checkRequiredKeys',
+                ['a' => 1, 'b' => null],
+                ['a', 'b'],
+                'Key b is required',
+            ],
+            'second of the keys' => [
+                'checkOnlyOneKeyExists',
+                ['a' => 1, 'c' => 2],
+                ['a', 'b', 'c'],
+                'Only one of a, b, c can be provided',
+            ],
+        ];
     }
 
     public function testIgnoredAvailableKeysCheckAcceptsUnknownKeys()
     {
-        $this->denormalizer->ignoreAvailableKeysCheck();
+        $denormalizer = new KeyCheckingDenormalizer();
+        $denormalizer->ignoreAvailableKeysCheck();
 
         $this->expectNotToPerformAssertions();
 
-        $this->denormalizer->checkAvailableKeys(['c' => 2], ['a']);
+        $denormalizer->checkAvailableKeys(['c' => 2], ['a']);
     }
 
     public function testIgnoredAvailableKeysCheckStillRejectsContentThatIsNotArray()
     {
-        $this->denormalizer->ignoreAvailableKeysCheck();
+        $denormalizer = new KeyCheckingDenormalizer();
+        $denormalizer->ignoreAvailableKeysCheck();
 
         $this->expectException(InvalidDataException::class);
         $this->expectExceptionMessage('Content is expected to be array');
 
-        $this->denormalizer->checkAvailableKeys(null, ['a']);
-    }
-
-    public function testCheckRequiredKeysAcceptsPresentKeys()
-    {
-        $this->expectNotToPerformAssertions();
-
-        $this->denormalizer->checkRequiredKeys(['a' => 1, 'b' => 0, 'c' => 3], ['a', 'b']);
-    }
-
-    public function testCheckRequiredKeysTreatsNullAsMissing()
-    {
-        $this->expectException(InvalidDataException::class);
-        $this->expectExceptionMessage('Key b is required');
-
-        $this->denormalizer->checkRequiredKeys(['a' => 1, 'b' => null], ['a', 'b']);
-    }
-
-    public function testCheckOnlyOneKeyExistsAcceptsOneKeyAndIgnoresNullValues()
-    {
-        $this->expectNotToPerformAssertions();
-
-        $this->denormalizer->checkOnlyOneKeyExists(['a' => 1, 'b' => null, 'x' => 2], ['a', 'b', 'c']);
-    }
-
-    public function testCheckOnlyOneKeyExistsRejectsSecondKey()
-    {
-        $this->expectException(InvalidDataException::class);
-        $this->expectExceptionMessage('Only one of a, b, c can be provided');
-
-        $this->denormalizer->checkOnlyOneKeyExists(['a' => 1, 'c' => 2], ['a', 'b', 'c']);
+        $denormalizer->checkAvailableKeys(null, ['a']);
     }
 }

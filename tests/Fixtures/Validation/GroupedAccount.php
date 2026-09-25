@@ -5,9 +5,6 @@ namespace Paysera\Component\Serializer\Tests\Fixtures\Validation;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Mapping\ClassMetadata;
 
-/**
- * Its only constraint belongs to the `Strict` group, so it fails only when that group is validated.
- */
 class GroupedAccount
 {
     private $accountNumber;
