@@ -2,6 +2,8 @@
 
 namespace Paysera\Component\Serializer\Tests\Entity;
 
+use BadMethodCallException;
+use Paysera\Component\Serializer\Entity\Filter;
 use Paysera\Component\Serializer\Entity\Result;
 use Paysera\Component\Serializer\Tests\Fixtures\OwnConstructorFilter;
 use PHPUnit\Framework\TestCase;
@@ -101,5 +103,89 @@ class ResultTest extends TestCase
         );
 
         $this->assertContains(ReturnTypeWillChange::class, $attributes);
+    }
+
+    public function testCalculateTotalCountThrowsWithoutFilter()
+    {
+        $this->expectException(BadMethodCallException::class);
+        $this->expectExceptionMessage('filter must be set before calling this method');
+
+        (new Result())->calculateTotalCount(5);
+    }
+
+    /**
+     * @dataProvider totalCountProvider
+     */
+    public function testCalculateTotalCount(Filter $filter, $resultCount, $expectedReturn, $expectedTotal)
+    {
+        $result = (new Result($filter))->setTotalCount(99);
+
+        $this->assertSame($expectedReturn, $result->calculateTotalCount($resultCount));
+        $this->assertSame($expectedTotal, $result->getTotalCount());
+    }
+
+    public static function totalCountProvider()
+    {
+        return [
+            'no limit' => [(new Filter())->setOffset(10), 5, 15, 15],
+            'fewer results than limit' => [(new Filter())->setOffset(10)->setLimit(20), 5, 15, 15],
+            'no results on first page' => [(new Filter())->setLimit(20), 0, 0, 0],
+            'page is full' => [(new Filter())->setLimit(20), 20, null, 99],
+            'cursor is used' => [(new Filter())->setAfter('cursor'), 5, null, 99],
+            'no results past first page' => [(new Filter())->setOffset(40)->setLimit(20), 0, null, 99],
+        ];
+    }
+
+    /**
+     * @dataProvider resultProvider
+     */
+    public function testGetters(Result $result, array $expected)
+    {
+        $this->assertSame(
+            $expected,
+            [
+                'filter' => $result->getFilter(),
+                'totalCount' => $result->getTotalCount(),
+                'hasNext' => $result->hasNext(),
+                'hasPrevious' => $result->hasPrevious(),
+                'after' => $result->getAfter(),
+                'before' => $result->getBefore(),
+            ]
+        );
+    }
+
+    public static function resultProvider()
+    {
+        $filter = new Filter();
+
+        return [
+            'not set' => [
+                new Result($filter),
+                [
+                    'filter' => $filter,
+                    'totalCount' => 0,
+                    'hasNext' => null,
+                    'hasPrevious' => null,
+                    'after' => null,
+                    'before' => null,
+                ],
+            ],
+            'all set, total count given as a string' => [
+                (new Result($filter))
+                    ->setTotalCount('12')
+                    ->setHasNext(true)
+                    ->setHasPrevious(false)
+                    ->setAfter('a')
+                    ->setBefore('b'),
+                [
+                    'filter' => $filter,
+                    'totalCount' => 12,
+                    'hasNext' => true,
+                    'hasPrevious' => false,
+                    'after' => 'a',
+                    'before' => 'b',
+                ],
+            ],
+        ];
     }
 }

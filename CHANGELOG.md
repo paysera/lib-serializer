@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 3.6.0
+### Added
+- Symfony 7 support: `symfony/property-access` and `symfony/validator` also allow `^7.4`, the
+  long-term-support release of Symfony 7 (7.0 to 7.3 are no longer maintained). On Symfony 7 a
+  constraint's error name is read only from its `ERROR_NAMES` constant, so a custom constraint
+  that names its errors only in the `$errorNames` property is reported by
+  `PropertiesAwareValidator` with its raw code. Declare `protected const ERROR_NAMES`, and keep
+  `$errorNames` next to it while you support Symfony below 6.1, which reads only the property
+  (6.1 to 6.4 read both).
+- Tests for every class. `PropertiesAwareValidator` and `PropertyPathFieldAccessor` are tested
+  against Symfony's real validator and property accessor, so each Symfony version in the test
+  matrix runs the code that calls Symfony.
+
+### Removed
+- `symfony/validator` 3.0.x, 3.1.0 to 3.1.8 and 3.2.0 to 3.2.1. When a validated property holds
+  an array or an object under `Valid`, they call `count()` on `null`: a warning on PHP 7.4, and a
+  `TypeError` on PHP 8 for 3.1.7, 3.1.8, 3.2.0 and 3.2.1. On PHP 8, 3.0.x and 3.1.0 to 3.1.6 fail
+  on their first validation, because PHP 8 cannot compile them. Projects locked to one of them
+  stay on 3.5.x.
+
 ## 3.5.0
 ### Changed
 - `DateNormalizer::mapToEntity()` rejects `null` up front instead of passing it to
