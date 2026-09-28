@@ -27,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - `Jsonp::encode()` no longer forgets an invalid parameter after the first call. It used to clear
   the parameter on the encoder, so a second call on the same instance returned the data without the
-  `invalid_parameters` error.
+  `invalid_parameters` error. Encoders created by `JsonpEncoderFactory` were not affected: it creates a
+  new one for every call.
 
 ## 3.5.0
 ### Changed

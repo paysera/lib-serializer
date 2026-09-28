@@ -8,6 +8,7 @@ use Paysera\Component\Serializer\Filter\FieldsParser;
 use Paysera\Component\Serializer\Normalizer\DistributedNormalizer;
 use Paysera\Component\Serializer\Normalizer\PlainNormalizer;
 use PHPUnit\Framework\TestCase;
+use ReflectionProperty;
 
 class ContextAwareNormalizerFactoryTest extends TestCase
 {
@@ -23,9 +24,12 @@ class ContextAwareNormalizerFactoryTest extends TestCase
         $this->assertEquals(new DistributedNormalizer($factory, $fieldsParser, $fieldsFilter, $normalizer), $created);
         $this->assertSame(
             [$factory, $fieldsParser, $fieldsFilter, $normalizer],
-            (function () {
-                return [$this->factory, $this->fieldsParser, $this->fieldsFilter, $this->normalizer];
-            })->call($created)
+            array_map(function ($property) use ($created) {
+                $reflectionProperty = new ReflectionProperty(DistributedNormalizer::class, $property);
+                $reflectionProperty->setAccessible(true);
+
+                return $reflectionProperty->getValue($created);
+            }, ['factory', 'fieldsParser', 'fieldsFilter', 'normalizer'])
         );
     }
 }
