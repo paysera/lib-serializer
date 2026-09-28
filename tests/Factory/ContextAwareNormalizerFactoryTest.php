@@ -26,7 +26,9 @@ class ContextAwareNormalizerFactoryTest extends TestCase
             [$factory, $fieldsParser, $fieldsFilter, $normalizer],
             array_map(function ($property) use ($created) {
                 $reflectionProperty = new ReflectionProperty(DistributedNormalizer::class, $property);
-                $reflectionProperty->setAccessible(true);
+                if (PHP_VERSION_ID < 80100) {
+                    $reflectionProperty->setAccessible(true);
+                }
 
                 return $reflectionProperty->getValue($created);
             }, ['factory', 'fieldsParser', 'fieldsFilter', 'normalizer'])
