@@ -37,7 +37,9 @@ class DistributedNormalizerTest extends TestCase
         $normalizer = (new ReflectionClass(DistributedNormalizer::class))->newInstanceWithoutConstructor();
 
         $reflectionProperty = new ReflectionProperty(DistributedNormalizer::class, $property);
-        $reflectionProperty->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) {
+            $reflectionProperty->setAccessible(true);
+        }
 
         $this->assertSame([], $reflectionProperty->getValue($normalizer));
     }
