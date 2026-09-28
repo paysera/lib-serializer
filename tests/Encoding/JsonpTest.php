@@ -17,7 +17,7 @@ class JsonpTest extends TestCase
     {
         $encoder = new Jsonp(new Json(), new JsonpCallbackValidator(), $callback, $parameter);
 
-        $this->assertSame($expected, $encoder->encode(['a' => 1]));
+        $this->assertSame([$expected, $expected], [$encoder->encode(['a' => 1]), $encoder->encode(['a' => 1])]);
     }
 
     public static function encodeProvider()
