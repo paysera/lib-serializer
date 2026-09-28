@@ -21,6 +21,7 @@ use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class PropertiesAwareValidatorTest extends TestCase
 {
@@ -138,16 +139,7 @@ class PropertiesAwareValidatorTest extends TestCase
                 $this->calls[] = [$entity, $groups];
 
                 return new ConstraintViolationList([
-                    new ConstraintViolation(
-                        'First message.',
-                        'First message.',
-                        [],
-                        $entity,
-                        'someField',
-                        1,
-                        null,
-                        'CODE_WITHOUT_CONSTRAINT'
-                    ),
+                    new ConstraintViolation('First message.', 'First message.', [], $entity, 'someField', 1),
                     new ConstraintViolation('Second message.', 'Second message.', [], $entity, 'someField', 1),
                 ]);
             }
@@ -163,6 +155,18 @@ class PropertiesAwareValidatorTest extends TestCase
                 return [$violation->getField(), $violation->getMessage(), $violation->getCode()];
             }, $exception->getViolations())
         );
+    }
+
+    public function testCodeOfAViolationWithoutAConstraintIsNotReported()
+    {
+        $symfonyValidator = $this->createMock(ValidatorInterface::class);
+        $symfonyValidator->method('validate')->willReturn(new ConstraintViolationList([
+            new ConstraintViolation('Message.', 'Message.', [], null, 'someField', 1, null, 'SOME_CODE'),
+        ]));
+
+        $exception = $this->validateAndCatch(new PropertiesAwareValidator($symfonyValidator), new stdClass());
+
+        $this->assertSame([['someField', 'Message.', null]], $this->describeViolations($exception->getViolations()));
     }
 
     private function createSymfonyValidator()

@@ -18,9 +18,14 @@ class ContextAwareNormalizerFactoryTest extends TestCase
         $factory = new ContextAwareNormalizerFactory($fieldsParser, $fieldsFilter);
         $normalizer = new PlainNormalizer();
 
-        $this->assertEquals(
-            new DistributedNormalizer($factory, $fieldsParser, $fieldsFilter, $normalizer),
-            $factory->create($normalizer)
+        $created = $factory->create($normalizer);
+
+        $this->assertEquals(new DistributedNormalizer($factory, $fieldsParser, $fieldsFilter, $normalizer), $created);
+        $this->assertSame(
+            [$factory, $fieldsParser, $fieldsFilter, $normalizer],
+            (function () {
+                return [$this->factory, $this->fieldsParser, $this->fieldsFilter, $this->normalizer];
+            })->call($created)
         );
     }
 }
