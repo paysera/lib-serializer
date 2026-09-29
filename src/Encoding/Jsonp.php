@@ -50,12 +50,13 @@ class Jsonp implements EncoderInterface
             return 'alert("Invalid callback function name");';
         }
         $json = $this->jsonEncoder->encode($data);
+        $parameter = $this->parameter;
 
-        if ($this->parameter !== null) {
+        if ($parameter !== null) {
             try {
-                $this->jsonEncoder->decode($this->parameter);
+                $this->jsonEncoder->decode($parameter);
             } catch (EncodingException $exception) {
-                $this->parameter = null;
+                $parameter = null;
                 $json = $this->jsonEncoder->encode([
                     'error' => 'invalid_parameters',
                     'error_description' => 'Passed parameter must be valid JSON string',
@@ -64,7 +65,7 @@ class Jsonp implements EncoderInterface
         }
 
         return '/**/' . $this->callbackFunction
-            . '(' . $json . ($this->parameter === null ? '' : ', ' . $this->parameter) . ');';
+            . '(' . $json . ($parameter === null ? '' : ', ' . $parameter) . ');';
     }
 
     /**
